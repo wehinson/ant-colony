@@ -446,3 +446,56 @@ test("fractional animation time cannot produce a negative save accumulator", () 
   assert.ok(e.state.accumulator >= 0);
   assert.doesNotThrow(() => ColonyEngine.deserialize(e.serialize()));
 });
+
+test("shelter does not block a returned empty forager from changing crew", () => {
+  const e = colony();
+  e.state.ants = [];
+  ants(e, 1);
+  const a = e.state.ants[0];
+  a.phase = "inbound";
+  a.cargo = 0;
+  a.trip = { entry: { x: 0, y: 0 } };
+  e.command({ type: "shelter", value: true });
+  assert.ok(e.command({ type: "assign", crew: "warrior", delta: 1 }).ok);
+  const position = { x: a.x, y: a.y };
+  run(e, 0.1);
+  assert.equal(a.crew, "warrior");
+  assert.equal(a.pendingCrew, null);
+  assert.ok(Math.hypot(a.x - position.x, a.y - position.y) < 0.2);
+  assert.equal(e.getStats().population, 1);
+});
+
+test("the engine clock runs without render frames and suspension has no catch-up", () => {
+  const session = new GameSession(null, 5);
+  let now = 0,
+    pulse,
+    canceled = false;
+  session.startClock({
+    now: () => now,
+    schedule: (callback) => {
+      pulse = callback;
+      return 7;
+    },
+    cancel: (handle) => {
+      canceled = handle === 7;
+    },
+  });
+  session.command({ type: "start" });
+  for (let i = 0; i < 40; i++) {
+    now += 25;
+    pulse();
+  }
+  assert.equal(session.engine.state.time, 1);
+  now += 50;
+  assert.ok(session.alpha() >= 0.49 && session.alpha() <= 0.51);
+  session.suspend(true);
+  now += 100000;
+  pulse();
+  assert.equal(session.engine.state.time, 1);
+  session.suspend(false);
+  now += 100;
+  pulse();
+  assert.equal(session.engine.state.time, 1.1);
+  session.stopClock();
+  assert.ok(canceled);
+});

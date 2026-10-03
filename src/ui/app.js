@@ -34,9 +34,7 @@ const ui = {
   dialog: null,
   toastUntil: 0,
 };
-let view = session.view(),
-  lastFrame = performance.now(),
-  nextUI = 0;
+let view = session.view();
 
 for (const [id, name, size] of [
   ["brand-icon", "ant", 31],
@@ -601,18 +599,11 @@ document.addEventListener("keydown", (event) => {
 });
 document.addEventListener("visibilitychange", () => {
   session.suspend(document.hidden);
-  lastFrame = performance.now();
 });
 window.addEventListener("pagehide", () => session.save());
 window.addEventListener("beforeunload", () => session.save());
 
 function frame(now) {
-  session.advance((now - lastFrame) / 1000);
-  lastFrame = now;
-  if (now >= nextUI) {
-    renderUI();
-    nextUI = now + 200;
-  }
   if (ui.building && ui.hover)
     ui.preview = session.preview(
       ui.building,
@@ -630,4 +621,11 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 renderUI();
+session.startClock({
+  now: () => performance.now(),
+  schedule: (callback, interval) => window.setInterval(callback, interval),
+  cancel: (handle) => window.clearInterval(handle),
+  onUpdate: renderUI,
+});
+session.suspend(document.hidden);
 requestAnimationFrame(frame);

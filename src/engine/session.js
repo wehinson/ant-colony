@@ -40,8 +40,27 @@ export class GameSession {
     )
       this.save();
   }
+  startClock({ now, schedule, cancel, onUpdate = () => {} }) {
+    this.stopClock();
+    this.clock = { now, cancel, lastTick: now(), lastView: now() };
+    this.clock.handle = schedule(() => {
+      const current = now();
+      const elapsed = Math.max(0, (current - this.clock.lastTick) / 1000);
+      this.clock.lastTick = current;
+      this.advance(elapsed);
+      if (current - this.clock.lastView >= 200) {
+        this.clock.lastView = current;
+        onUpdate();
+      }
+    }, 25);
+  }
+  stopClock() {
+    if (this.clock) this.clock.cancel(this.clock.handle);
+    this.clock = null;
+  }
   suspend(value) {
     this.suspended = value;
+    if (this.clock) this.clock.lastTick = this.clock.now();
     if (value) this.save();
   }
   openPanel() {
@@ -63,9 +82,16 @@ export class GameSession {
     return this.engine.state;
   }
   alpha() {
-    return this.engine.state.paused
+    const elapsed = this.clock
+      ? Math.max(0, (this.clock.now() - this.clock.lastTick) / 1000)
+      : 0;
+    return this.engine.state.paused || this.suspended
       ? 1
-      : Math.min(1, this.engine.state.accumulator / STEP);
+      : Math.min(
+          1,
+          (this.engine.state.accumulator + elapsed * this.engine.state.speed) /
+            STEP,
+        );
   }
   preview(...args) {
     return this.engine.preview(...args);

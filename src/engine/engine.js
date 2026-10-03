@@ -1073,6 +1073,12 @@ export class ColonyEngine {
         this.move(a, { x: b.x, y: b.y }, this.workerSpeed(), dt) && b.complete;
       return;
     }
+    if (a.pendingCrew && a.cargo < 0.001 && a.phase !== "forage" && a.y >= 1) {
+      // A recalled, empty worker has completed its return once it is inside.
+      // Shelter must not prevent an already-safe recruit from joining defense.
+      a.trip = null;
+      this._setCrew(a, a.pendingCrew);
+    }
     if (a.crew === "warrior") {
       this._warrior(a, dt);
       return;
