@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f1e8">
+  <meta name="description" content="Build a world beneath your feet. Excavate, grow, and defend your ant colony in an endless colony-building strategy game.">
+  <title>Ant Colony — A world beneath your feet</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/src/ui/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Ant Colony home"><span class="brand-mark" id="brand-icon"></span><span><strong>ANT COLONY<span class="brand-dot">.</span></strong><small>A WORLD BENEATH YOUR FEET</small></span></a>
+      <div class="top-center"><span class="live-dot"></span><span id="colony-label">COLONY 01</span><span class="top-divider"></span><span id="time-label" class="mono">00:00</span></div>
+      <div class="top-actions"><div class="speed-control" id="speed-control"></div><button class="icon-button" id="pause-button" data-action="pause" title="Pause / resume (Space)" aria-label="Pause game"></button><span class="top-divider"></span><button class="icon-button" data-action="help" title="How to play" aria-label="How to play" id="help-button"></button><button class="icon-button" data-action="settings" title="Save and settings" aria-label="Save and settings" id="settings-button"></button></div>
+    </header>
+    <section class="resources" id="resources" aria-label="Colony resources"></section>
+    <main class="game-layout">
+      <aside class="sidebar build-sidebar" aria-label="Construction">
+        <div class="panel-heading"><div><span class="eyebrow">MAKE YOURSELF AT HOME</span><h1>Build & expand</h1></div><span class="outline-icon" id="rooms-icon"></span></div>
+        <div class="branch-tabs" role="tablist" aria-label="Construction branch"><button class="active" data-action="branch" data-value="economy" role="tab" aria-selected="true" id="economy-tab">Chambers</button><button data-action="branch" data-value="military" role="tab" aria-selected="false" id="military-tab">Defenses</button></div>
+        <div id="building-list" class="building-list"></div>
+        <div class="build-footer"><span id="mouse-icon"></span><span>Right-click dirt to dig.<br><strong>Small tunnels. Big possibilities.</strong></span></div>
+      </aside>
+      <section class="world-panel" aria-label="Colony map">
+        <div class="world-heading"><div><span class="eyebrow">YOUR LITTLE EMPIRE</span><h2>The underground</h2></div><span class="world-weather"><span id="sun-icon"></span> A good day to grow</span></div>
+        <div class="map-wrap" id="map-wrap">
+          <canvas id="world" tabindex="0" aria-label="Ant colony map. Right-click to excavate; choose a building then click to place it. Use arrow keys to pan, plus and minus to zoom, Q to center the queen."></canvas>
+          <div class="map-top"><div class="map-badge"><span class="live-dot"></span><span id="map-status">Founding the colony</span></div><button class="map-button" data-action="grid" title="Toggle grid (G)" aria-label="Toggle map grid" id="grid-button"></button></div>
+          <div class="objective-card" id="objective"></div>
+          <div class="map-message" id="map-message" role="status"></div>
+          <div class="map-tooltip" id="map-tooltip"></div>
+          <div class="map-bottom"><div class="map-tools"><button class="map-button" data-action="tool" data-value="inspect" title="Inspect (Escape)" aria-label="Inspect tool" id="inspect-tool"></button><button class="map-button" data-action="tool" data-value="dig" title="Dig tool (D)" aria-label="Dig tool" id="dig-tool"></button><button class="map-button" data-action="tool" data-value="rally" title="Set rally point (R)" aria-label="Rally point tool" id="rally-tool"></button><span class="tool-divider"></span><button class="map-button" data-action="focus" data-value="queen" title="Center queen (Q)" aria-label="Center on queen" id="queen-focus"></button><button class="map-button" data-action="focus" data-value="threat" title="Center threat (T)" aria-label="Center on threat" id="threat-focus"></button></div><div class="zoom-tools"><button class="map-button" data-action="zoom" data-value="-1" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button class="map-button" data-action="zoom" data-value="1" aria-label="Zoom in">+</button></div></div>
+          <div class="paused-banner" id="paused-banner" hidden>PAUSED <span>Take your time. Orders can still be placed.</span></div>
+        </div>
+        <div class="map-caption"><span><kbd>RIGHT CLICK</kbd> dig <span class="caption-dot">·</span> <kbd>DRAG</kbd> pan <span class="caption-dot">·</span> <kbd>SCROLL</kbd> zoom</span><span id="coordinate-label" class="mono">0, 0</span></div>
+        <div class="journal"><div class="journal-heading"><span id="journal-icon"></span><span>Colony journal</span><span class="journal-rule"></span><button class="text-button" data-action="journal">View all</button></div><div id="journal-latest"></div></div>
+      </section>
+      <aside class="sidebar colony-sidebar" aria-label="Colony management">
+        <div id="raid-card" class="raid-card"></div>
+        <section class="crew-section"><div class="section-heading"><h2>The workforce</h2><span class="small-tag" id="worker-total"></span></div><p class="section-subtitle">Every ant has a part to play.</p><div id="crews"></div><div class="new-workers"><label for="new-crew">New workers join</label><select id="new-crew"><option value="food">Food crew</option><option value="dig">Dig crew</option><option value="warrior">Warriors</option></select></div></section>
+        <section class="brood-section"><div class="section-heading"><h2>The next generation</h2><button class="text-button" data-action="eggs" id="eggs-button">Pause eggs</button></div><div id="brood"></div></section>
+        <section id="selection" class="selection-section"></section>
+        <section class="colony-controls"><button class="secondary-button full" data-action="shelter" id="shelter-button"></button><label class="check-label"><input type="checkbox" id="auto-shelter" checked> Shelter workers when a raid is near</label><button class="text-button improvements-button" data-action="research" id="improvements-button"></button></section>
+        <div class="save-note" id="save-note"></div>
+      </aside>
+    </main>
+    <footer class="page-footer"><span>ROOTED IN RESILIENCE.</span><span>Excavate. Grow. Defend. Begin again.</span><span>ANT COLONY <span class="version">v0.1.0</span></span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="dialog"><div id="dialog-content"></div></dialog>
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
+  <script type="module" src="/src/ui/app.js"></script>
+</body>
+</html>

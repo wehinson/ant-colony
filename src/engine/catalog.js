@@ -41,7 +41,7 @@ export const RESEARCH = {
   armor: { name: 'Chitin training', description: '+15% warrior health and damage.', base: 36 },
 };
 export const key = (x, y) => `${x},${y}`;
-export const cell = p => ({ x: Math.round(p.x), y: Math.round(p.y) });
+export const cell = p => ({ x: Math.round(p.x) || 0, y: Math.round(p.y) || 0 });
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 export const center = b => ({ x: b.x + (BUILDINGS[b.type].w - 1) / 2, y: b.y + (BUILDINGS[b.type].h - 1) / 2 });
