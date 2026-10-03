@@ -23,7 +23,8 @@ export function getView(engine, selectedId = null) {
   else { urgency = 'danger'; raidTitle = `Raid ${r.number} · wave ${r.wave}/${r.plan.waves.length}`; raidDetail = `${s.enemies.length + r.pending.length} attackers remain · ${r.plan.direction}`; raidTimer = 'DEFEND'; }
   const catalog = Object.entries(BUILDINGS).map(([type, d]) => {
     const unlocked = engine.unlocked(type), unique = type === 'queen' && s.buildings.some(b => b.type === 'queen');
-    return { ...d, type, unlocked, unique, label: d.food ? `${d.food} food${d.staff ? ` · ${d.staff} warriors` : d.energy ? ` · ${d.energy} energy` : ''}` : 'Founding chamber', footprintLabel: `${d.w} × ${d.h}`, disabled: !unlocked || unique, lockedReason: d.branch === 'military' ? 'Complete Food Storage' : type === 'queen' ? '' : `Complete ${BUILDINGS[ECONOMIC[ECONOMIC.indexOf(type) - 1]].name}` };
+    const food = type === 'queen' && s.status !== 'founding' ? 24 : d.food;
+    return { ...d, food, type, unlocked, unique, label: food ? `${food} food${d.staff ? ` · ${d.staff} warriors` : d.energy ? ` · ${d.energy} energy` : ''}` : 'Founding chamber', footprintLabel: `${d.w} × ${d.h}`, disabled: !unlocked || unique, lockedReason: d.branch === 'military' ? 'Complete Food Storage' : type === 'queen' ? '' : `Complete ${BUILDINGS[ECONOMIC[ECONOMIC.indexOf(type) - 1]].name}` };
   });
   const crews = [
     { key: 'food', name: 'Food crew', icon: 'leaf', count: st.counts.food, detail: waitingCargo ? `${waitingCargo} waiting to unload · storage full` : engine.sheltered() ? 'Returning to shelter' : `${s.ants.filter(a => a.crew === 'food' && ['outbound', 'inbound', 'forage'].includes(a.phase)).length} on foraging trips` },
@@ -37,7 +38,9 @@ export function getView(engine, selectedId = null) {
     eggs: s.eggs.filter(e => e.buildingId === selected.id).length, progress: footprint(selected.type, selected.x, selected.y).filter(p => isOpen(s.world, p.x, p.y)).length / (BUILDINGS[selected.type].w * BUILDINGS[selected.type].h),
   } : null;
   const alerts = [];
+  if (s.status === 'active' && !s.buildings.some(b => b.type === 'queen')) alerts.push({ icon: 'crown', text: `Queen’s Chamber lost. Rebuild at (${s.queen.home.x}, ${s.queen.home.y}) to resume brood production.`, kind: 'danger' });
   if (waitingCargo || s.food >= st.foodCap - 0.01) alerts.push({ icon: 'leaf', text: 'Storage full. Add storage or spend food.', kind: 'warning' });
+  if (s.refundFood > 0) alerts.push({ icon: 'leaf', text: `${Math.ceil(s.refundFood)} refunded food is reserved until storage has space.`, kind: 'info' });
   if (s.jobs.length && !st.counts.dig && s.status !== 'founding') alerts.push({ icon: 'pick', text: 'Assign a digger to work on queued tiles.', kind: 'warning' });
   else if (s.jobs.length && !s.jobs.some(j => j.owner) && st.counts.dig && !engine.sheltered()) alerts.push({ icon: 'pick', text: 'No reachable digging jobs. Connect a tunnel.', kind: 'warning' });
   if (s.energy < 1 && s.jobs.length) alerts.push({ icon: 'bolt', text: 'Low energy. Digging waits for recovery.', kind: 'warning' });

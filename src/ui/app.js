@@ -100,7 +100,7 @@ document.addEventListener('click', event => {
     case 'import': $('import-file').click(); break;
     case 'buyResearch': command({ type: 'research', key: value }); refreshDialog(); break;
     case 'prestige': command({ type: 'prestige', branch: value }); refreshDialog(); break;
-    case 'newRun': ui.dialog = null; $('dialog').close(); ui.selected = null; ui.branch = 'economy'; selectTool('inspect'); session.panelOpen = false; command({ type: 'newRun' }); renderer.focus({ x: 0, y: 4 }); break;
+    case 'newRun': session.command({ type: 'newRun' }); ui.dialog = null; $('dialog').close(); ui.selected = null; ui.branch = 'economy'; session.panelOpen = false; selectTool('inspect'); renderer.focus({ x: 0, y: 4 }); break;
   }
 });
 $('dialog').addEventListener('cancel', event => { event.preventDefault(); closeDialog(); });

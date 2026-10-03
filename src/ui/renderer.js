@@ -44,6 +44,12 @@ export class MapRenderer {
       if (s.world.dug[`${x},${y + 1}`]) c.fillRect(p.x + 2, p.y + t / 2, t - 4, t / 2 + 5);
       if (y === 1) { c.fillRect(p.x + 2, p.y - t * 0.27, t - 4, t * 0.4); ellipse(c, p.x + t / 2, surface - 3, t * 0.6, t * 0.11, '#665638'); }
     }
+    c.fillStyle = '#c3a27a';
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) if (s.world.dug[`${x},${y}`]) {
+      const p = this.project(x, y);
+      if (s.world.dug[`${x + 1},${y}`]) c.fillRect(p.x, p.y - t / 2 + 3, t, t - 6);
+      if (s.world.dug[`${x},${y + 1}`]) c.fillRect(p.x - t / 2 + 3, p.y, t - 6, t);
+    }
     for (const j of s.jobs) {
       if (j.x < minX || j.x > maxX || j.y < minY || j.y > maxY) continue;
       const p = this.project(j.x - 0.5, j.y - 0.5); c.save(); c.setLineDash([3, 4]); c.strokeStyle = '#ead19a88'; c.lineWidth = 1; roundRect(c, p.x + 4, p.y + 4, t - 8, t - 8, 3); c.stroke(); c.restore();
@@ -55,7 +61,7 @@ export class MapRenderer {
     for (const d of s.drops) { const p = this.project(d.x, d.y); if (p.x < -30 || p.x > W + 30 || p.y < -30 || p.y > H + 30) continue; ellipse(c, p.x, p.y + 2, t * 0.09, t * 0.055, d.captureTarget ? '#a9af56' : '#9b8554', -0.5); }
     const visible = a => a.x >= minX && a.x <= maxX && a.y >= tl.y - 1 && a.y <= maxY;
     // Render fewer noncombat civilian details when zoomed far out; all ants remain simulated.
-    for (let i = 0; i < s.ants.length; i++) { const a = s.ants[i]; if (a.phase === 'forage' || !visible(a) || (a.staffOf && s.buildings.some(b => b.id === a.staffOf && b.complete))) continue; if (this.camera.zoom < 0.6 && a.crew !== 'warrior' && i % 2) continue; this.ant(a, alpha, s.time, t); }
+    for (let i = 0; i < s.ants.length; i++) { const a = s.ants[i]; if (a.phase === 'forage' || !visible(a) || (a.staffOf && a.stationed)) continue; if (this.camera.zoom < 0.6 && a.crew !== 'warrior' && i % 2) continue; this.ant(a, alpha, s.time, t); }
     for (const e of s.enemies) if (visible(e)) this.enemy(e, alpha, s.time, t);
     if (visible(s.queen)) this.ant(s.queen, alpha, s.time, t, true);
     for (const fx of s.effects) { const a = this.project(fx.x, fx.y), b = this.project(fx.tx, fx.ty), life = 1 - (s.time - fx.at) / fx.duration; c.save(); c.globalAlpha = Math.max(0, life); if (['shot', 'attack'].includes(fx.type)) { c.strokeStyle = fx.color; c.lineWidth = fx.type === 'shot' ? 2 : 1.5; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); ellipse(c, b.x, b.y, 3, 3, '#f6d278'); } else if (fx.type === 'food') { c.fillStyle = '#d7e29c'; c.font = 'bold 12px Segoe UI'; c.textAlign = 'center'; c.fillText('+ food', a.x, a.y - (1 - life) * 22); } else { c.strokeStyle = fx.color; c.lineWidth = 2; c.beginPath(); c.arc(b.x, b.y, (1 - life) * t * 0.65 + 3, 0, 7); c.stroke(); } c.restore(); }

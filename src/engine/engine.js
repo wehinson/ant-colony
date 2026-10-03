@@ -6,8 +6,8 @@ const freshState = (seed, meta) => ({
   version: VERSION, seed: seed >>> 0 || 1, rng: seed >>> 0 || 1, id: `colony-${meta.runs + 1}-${seed >>> 0}`, meta: structuredClone(meta),
   time: 0, tick: 0, accumulator: 0, speed: 1, paused: true, started: false, status: 'founding', nextId: 1,
   world: { seed: seed >>> 0, dug: {}, chunks: {}, bounds: { minX: -18, maxX: 18, maxY: 18 }, revision: 0 },
-  food: 12 + 12 * meta.upgrades.founding, energy: 70 + 20 * meta.upgrades.founding, waste: 0,
-  queen: { id: 'queen', x: 0, y: 0, previousX: 0, previousY: 0, hp: 300 * (1 + 0.15 * meta.upgrades.military), maxHp: 300 * (1 + 0.15 * meta.upgrades.military), cooldown: 0, path: [], jobId: null, relocation: null },
+  food: 12 + 12 * meta.upgrades.founding, energy: 70 + 20 * meta.upgrades.founding, waste: 0, refundFood: 0, refundEnergy: 0,
+  queen: { id: 'queen', x: 0, y: 0, previousX: 0, previousY: 0, home: { x: -1, y: 3 }, hp: 300 * (1 + 0.15 * meta.upgrades.military), maxHp: 300 * (1 + 0.15 * meta.upgrades.military), cooldown: 0, path: [], jobId: null, relocation: null },
   ants: [], buildings: [], jobs: [], enemies: [], eggs: [], drops: [], effects: [], events: [], deliveries: [],
   unlocked: ['queen'], research: { carry: 0, speed: 0, armor: 0 }, peak: 0, births: 0, losses: 0,
   freeEgg: true, eggsPaused: false, newCrew: 'food', shelter: false, autoShelter: true, rally: null,
@@ -63,13 +63,14 @@ export class ColonyEngine {
     else if (d.surface ? y !== 0 : y < 1) reason = d.surface ? 'Place this on the surface row.' : 'Place this underground.';
     else if (tiles.some(p => buildingAt(s, p.x, p.y))) reason = 'This footprint overlaps another structure.';
     else if (type === 'queen' && s.buildings.some(b => b.type === 'queen') && !relocate) reason = 'There is only one Queen’s Chamber. Use Relocate.';
+    else if (type === 'queen' && s.status !== 'founding' && !relocate && (x !== s.queen.home.x || y !== s.queen.home.y)) reason = 'Rebuild the queen’s former chamber here first, then use Relocate between raids.';
     else if (relocate && (s.raid.phase !== 'peace' || s.time >= s.raid.nextAt - s.raid.warning)) reason = 'The queen can move only between raids and warnings.';
     else if (relocate && s.queen.relocation) reason = 'The queen is already moving.';
     else if (relocate && buried) reason = 'Excavate the entire destination first.';
     const hasConnection = tiles.some(p => (isOpen(s.world, p.x, p.y) && this.route(p, { x: 0, y: 0 }) !== null) || neighbors(p).some(n => isOpen(s.world, n.x, n.y) && this.route(n, { x: 0, y: 0 }) !== null));
     if (!reason && relocate && (!hasConnection || !this.route(s.queen, { x, y }))) reason = 'Needs a prepared, connected route.';
     const available = s.ants.filter(a => a.crew === 'warrior' && !a.staffOf && !a.pendingCrew && a.phase !== 'forage').length;
-    const food = relocate ? 0 : d.food, energy = relocate ? 0 : d.energy, staff = relocate ? 0 : d.staff;
+    const food = relocate ? 0 : type === 'queen' && s.status !== 'founding' ? 24 : d.food, energy = relocate ? 0 : d.energy, staff = relocate ? 0 : d.staff;
     if (!reason && s.food < food) reason = `Needs ${food} food.`;
     if (!reason && s.energy < energy) reason = `Needs ${energy} energy.`;
     if (!reason && available < staff) reason = `Needs ${staff} available warriors (${available} available).`;
@@ -130,18 +131,21 @@ export class ColonyEngine {
   _cancelJob(id) { const s = this.state; const job = s.jobs.find(j => j.id === id); if (!job) return; for (const a of [s.queen, ...s.ants]) if (a.jobId === id) { a.jobId = null; a.path = []; } s.jobs = s.jobs.filter(j => j.id !== id); }
   _place(type, x, y) {
     const s = this.state, d = BUILDINGS[type], id = this.id('building');
-    s.food -= d.food; s.energy -= d.energy;
+    const foodCost = type === 'queen' && s.status !== 'founding' ? 24 : d.food;
+    s.food -= foodCost; s.energy -= d.energy;
     const staff = s.ants.filter(a => a.crew === 'warrior' && !a.staffOf && !a.pendingCrew).slice(0, d.staff);
     for (const a of staff) { a.staffOf = id; a.phase = 'staff'; a.path = []; a.target = null; }
     const maxHp = d.hp * (d.branch === 'military' ? 1 + s.meta.upgrades.military * 0.15 : 1);
-    const b = { id, type, x, y, complete: false, level: 1, hp: maxHp, maxHp, staff: staff.map(a => a.id), reservedFood: d.food, reservedEnergy: d.energy, cooldown: 0, lastDamage: -100, repair: true, captureAt: s.time + 26, captures: 0 };
+    const b = { id, type, x, y, complete: false, level: 1, hp: maxHp, maxHp, staff: staff.map(a => a.id), reservedFood: foodCost, reservedEnergy: d.energy, cooldown: 0, lastDamage: -100, repair: true, captureAt: s.time + 26, captures: 0 };
     s.buildings.push(b); for (const p of footprint(type, x, y)) this._designate(p.x, p.y, id);
     ensureTerrain(s.world, x, y); return b;
   }
   _cancelBlueprint(id) {
     const s = this.state, b = s.buildings.find(b => b.id === id); if (!b || b.complete) return this.notify('Only unfinished blueprints can be canceled.');
     if (b.type === 'queen' && s.status === 'founding') return this.notify('The founding chamber is needed for your first worker.');
-    s.food = Math.min(this.getStats().foodCap, s.food + b.reservedFood); s.energy = Math.min(this.getStats().energyCap, s.energy + b.reservedEnergy);
+    const stats = this.getStats();
+    s.refundFood += Math.max(0, s.food + b.reservedFood - stats.foodCap); s.food = Math.min(stats.foodCap, s.food + b.reservedFood);
+    s.refundEnergy += Math.max(0, s.energy + b.reservedEnergy - stats.energyCap); s.energy = Math.min(stats.energyCap, s.energy + b.reservedEnergy);
     for (const id of b.staff) { const a = s.ants.find(a => a.id === id); if (a) { a.staffOf = null; a.phase = 'idle'; a.path = []; } }
     for (const j of [...s.jobs]) if (j.blueprint === b.id) this._cancelJob(j.id);
     s.buildings = s.buildings.filter(other => other.id !== id); return this.ok('Blueprint canceled. Reserved resources refunded; excavated tiles remain.');
@@ -208,9 +212,12 @@ export class ColonyEngine {
   }
   step(dt = STEP) {
     const s = this.state; if (s.paused || s.status === 'defeat') return;
-    s.tick++; s.time = s.tick * STEP;
+    s.tick++; s.time = s.tick * STEP; this._frontage = new Map();
     for (const a of [s.queen, ...s.ants, ...s.enemies]) { a.previousX = a.x; a.previousY = a.y; a.cooldown = Math.max(0, a.cooldown - dt); }
-    let st = this.getStats(); s.energy = Math.min(st.energyCap, s.energy + st.recovery * dt);
+    let st = this.getStats();
+    const refundFood = Math.min(s.refundFood, Math.max(0, st.foodCap - s.food)), refundEnergy = Math.min(s.refundEnergy, Math.max(0, st.energyCap - s.energy));
+    s.food += refundFood; s.refundFood -= refundFood; s.energy += refundEnergy; s.refundEnergy -= refundEnergy;
+    s.energy = Math.min(st.energyCap, s.energy + st.recovery * dt);
     s.waste = Math.max(0, s.waste + (s.ants.length * 0.018 + s.eggs.length * 0.035 - st.wasteRate) * dt);
     s.effects = s.effects.filter(e => s.time - e.at < e.duration); s.deliveries = s.deliveries.filter(d => s.time - d.at < 60);
     if (s.pendingResearch) { const name = s.pendingResearch; s.research[name]++; delete s.pendingResearch; if (name === 'armor') for (const a of s.ants.filter(a => a.crew === 'warrior')) { a.maxHp = this.antMaxHp('warrior'); } this.log('Colony improved', RESEARCH[name].name); }
@@ -249,7 +256,7 @@ export class ColonyEngine {
     const b = s.buildings.find(b => b.type === 'queen' && b.complete);
     if (q.relocation) {
       const p = q.relocation;
-      if (this.move(q, p, 0.7, dt)) { if (b) { b.x = p.x; b.y = p.y; s.world.revision++; } q.relocation = null; this.log('A new heart', 'The queen and her brood reached their new chamber.', 'milestone'); }
+      if (this.move(q, p, 0.7, dt)) { if (b) { b.x = p.x; b.y = p.y; q.home = { x: p.x, y: p.y }; s.world.revision++; } q.relocation = null; this.log('A new heart', 'The queen and her brood reached their new chamber.', 'milestone'); }
     } else if (b) this.move(q, { x: b.x + 1, y: b.y + 1 }, 0.7, dt);
     const e = s.enemies.find(e => e.hp > 0 && distance(e, q) <= 1.2 && lineOfSight(s.world, q, e));
     if (e && q.cooldown === 0) { this.hit(e, 11 * (1 + s.meta.upgrades.military * 0.15), q, 'queen'); q.cooldown = 1.1; }
@@ -291,7 +298,7 @@ export class ColonyEngine {
     const s = this.state;
     if (a.staffOf) {
       const b = s.buildings.find(b => b.id === a.staffOf); if (!b) { a.hp = 0; return; }
-      this.move(a, { x: b.x, y: b.y }, this.workerSpeed(), dt); return;
+      a.stationed = this.move(a, { x: b.x, y: b.y }, this.workerSpeed(), dt) && b.complete; return;
     }
     if (a.crew === 'warrior') { this._warrior(a, dt); return; }
     const threat = s.enemies.find(e => e.hp > 0 && distance(e, a) < 2.2 && lineOfSight(s.world, a, e));
@@ -370,7 +377,11 @@ export class ColonyEngine {
     const near = s.enemies.filter(e => e.hp > 0 && distance(a, e) < 1.15 && e.y >= 0 && lineOfSight(s.world, a, e)).sort((x, y) => distance(a, x) - distance(a, y))[0];
     if (near) e = near;
     if (e) {
-      if (distance(a, e) <= 1.15 && lineOfSight(s.world, a, e)) { if (a.cooldown === 0) { this.hit(e, 9 * (1 + s.meta.upgrades.military * 0.15 + s.research.armor * 0.15), a, 'warrior'); a.cooldown = 1; } return; }
+      if (distance(a, e) <= 1.15 && lineOfSight(s.world, a, e)) {
+        const occupied = this._frontage.get(e.id) || 0;
+        if (occupied < 4) { this._frontage.set(e.id, occupied + 1); if (a.cooldown === 0) { this.hit(e, 9 * (1 + s.meta.upgrades.military * 0.15 + s.research.armor * 0.15), a, 'warrior'); a.cooldown = 1; } }
+        return;
+      }
       // Each warrior gets an approach tile. Close combat has a finite attack frontage.
       const occupied = new Set(s.ants.filter(o => o.id !== a.id && o.crew === 'warrior' && !o.staffOf && distance(o, e) < 1.2).map(o => key(Math.round(o.x), Math.round(o.y))));
       const approach = neighbors(cell(e)).filter(p => isOpen(s.world, p.x, p.y) && !occupied.has(key(p.x, p.y))).map(p => ({ p, path: this.route(a, p) })).filter(o => o.path !== null).sort((x, y) => x.path.length - y.path.length)[0];
@@ -400,7 +411,7 @@ export class ColonyEngine {
   _makeRaid() {
     const s = this.state, raid = s.raid, number = raid.number + 1;
     const budget = Math.floor(10 + (s.time / 210) ** 1.8 * 4.6), waveCount = Math.min(6, 2 + Math.floor((number - 1) / 2));
-    const direction = this.random() < 0.5 ? 'west' : 'east', waves = [], roster = Object.keys(ENEMIES).filter(k => ENEMIES[k].minRaid <= number);
+    const direction = this.random() < 0.5 ? 'west' : 'east', waves = [], roster = Object.keys(ENEMIES).filter(k => ENEMIES[k].minRaid <= number && (!['wasp', 'tunneller'].includes(k) || this.unlocked('outpost')));
     for (let w = 0; w < waveCount; w++) {
       let remaining = Math.max(4, Math.floor(budget / waveCount * (0.85 + w * 0.18))), special = 0; const wave = [];
       while (remaining >= 1) {
@@ -425,14 +436,14 @@ export class ColonyEngine {
     if (r.pending.length && s.time >= r.spawnAt) { this.spawnEnemy(r.pending.shift(), r.plan.spawn); r.spawnAt = s.time + 1.4; }
     if (!r.pending.length && !s.enemies.some(e => e.hp > 0)) {
       if (r.wave < r.plan.waves.length) { r.phase = 'intermission'; r.waveAt = s.time + 20; this.log('A moment to breathe', `Wave ${r.wave} cleared. The next wave arrives in 20 seconds.`); }
-      else { r.highest = r.number; r.phase = 'peace'; r.lastEnded = s.time; r.nextAt = s.time + 390; r.plan = null; this.log(`Raid ${r.number} survived`, 'Repair your defenses, recover, and prepare. The next raid is growing stronger.', 'milestone'); }
+      else { r.highest = r.number; r.phase = 'peace'; r.lastEnded = s.time; r.nextAt = s.time + 450; r.plan = null; this.log(`Raid ${r.number} survived`, 'Repair your defenses, recover, and prepare. The next raid is growing stronger.', 'milestone'); }
     }
   }
   _startWave() { const s = this.state, r = s.raid; r.phase = 'active'; r.pending = [...r.plan.waves[r.wave]]; r.wave++; r.spawnAt = s.time; this.log(`Raid ${r.number} · wave ${r.wave}`, `${r.pending.length} attackers approach from the ${r.plan.direction}.`, 'danger'); }
   spawnEnemy(type, position) {
-    const s = this.state, d = ENEMIES[type], scale = 1 + Math.max(0, s.time - 350) / 700;
+    const s = this.state, d = ENEMIES[type], strengthTime = s.raid.plan?.fixedAt ?? s.time, scale = 1 + Math.max(0, strengthTime - 350) / 700;
     const p = { x: position.x, y: d.flying ? -1 : position.y };
-    const e = { id: this.id('enemy'), type, ...p, previousX: p.x, previousY: p.y, hp: d.hp * scale, maxHp: d.hp * scale, damage: d.damage * (1 + Math.max(0, s.time - 350) / 1400), cooldown: 0, path: [], slowUntil: 0, blockedBy: null, stolen: false, tunnelProgress: 0, warned: false };
+    const e = { id: this.id('enemy'), type, ...p, previousX: p.x, previousY: p.y, hp: d.hp * scale, maxHp: d.hp * scale, damage: d.damage * (1 + Math.max(0, strengthTime - 350) / 1400), cooldown: 0, path: [], slowUntil: 0, blockedBy: null, stolen: false, tunnelProgress: 0, warned: false };
     s.enemies.push(e); return e;
   }
   _enemy(e, dt) {
@@ -448,7 +459,7 @@ export class ColonyEngine {
     }
     if (e.stolen) { const entry = entrances(s.world).sort((a, b) => distance(e, a) - distance(e, b))[0]; if (entry && this.move(e, { x: entry.x + (e.x < 0 ? -16 : 16), y: 0 }, speed, dt, { enemy: true })) { e.escaped = true; e.hp = 0; } }
     const barrier = e.blockedBy && s.buildings.find(b => b.id === e.blockedBy && b.complete && distance(e, center(b)) < 1.8); e.blockedBy = null;
-    const nearby = s.ants.filter(a => a.hp > 0 && !a.staffOf && a.phase !== 'forage' && distance(a, e) <= d.range && lineOfSight(s.world, e, a)).sort((a, b) => (a.crew === 'warrior' ? 0 : 1) - (b.crew === 'warrior' ? 0 : 1));
+    const nearby = s.ants.filter(a => a.hp > 0 && (!a.staffOf || !s.buildings.some(b => b.id === a.staffOf && b.complete && distance(a, { x: b.x, y: b.y }) < 0.8)) && a.phase !== 'forage' && distance(a, e) <= d.range && lineOfSight(s.world, e, a)).sort((a, b) => (a.crew === 'warrior' ? 0 : 1) - (b.crew === 'warrior' ? 0 : 1));
     let target = barrier || nearby[0];
     if (!target && distance(e, s.queen) <= d.range + 0.2 && lineOfSight(s.world, e, s.queen)) target = s.queen;
     if (!target) target = s.buildings.find(b => b.complete && distance(e, center(b)) <= d.range + Math.max(BUILDINGS[b.type].w, BUILDINGS[b.type].h) * 0.35 && lineOfSight(s.world, e, center(b)));
@@ -499,6 +510,11 @@ export class ColonyEngine {
     if (typeof text !== 'string' || text.length > 30_000_000) throw new Error('Save file is too large or invalid.');
     let parsed; try { parsed = JSON.parse(text); } catch { throw new Error('This is not a valid JSON save file.'); }
     if (parsed?.format !== 'ant-colony' || parsed.version !== VERSION) throw new Error('This save version is not supported.');
+    // Keep early v1 local saves compatible with reservation accounting.
+    if (parsed.state && typeof parsed.state === 'object') {
+      parsed.state.refundFood ??= 0; parsed.state.refundEnergy ??= 0;
+      if (parsed.state.queen && !parsed.state.queen.home) { const home = Array.isArray(parsed.state.buildings) && parsed.state.buildings.find(b => b.type === 'queen'); parsed.state.queen.home = home ? { x: home.x, y: home.y } : { x: Math.round(parsed.state.queen.x) - 1, y: Math.round(parsed.state.queen.y) - 1 }; }
+    }
     validateSave(parsed.state); return new ColonyEngine({ state: parsed.state });
   }
 }
@@ -507,10 +523,11 @@ function validateSave(s) {
   const finite = x => typeof x === 'number' && Number.isFinite(x), nonnegative = x => finite(x) && x >= 0;
   const assert = (test, message) => { if (!test) throw new Error(`Invalid save: ${message}.`); };
   assert(s && typeof s === 'object', 'missing colony');
-  for (const k of ['time', 'tick', 'accumulator', 'food', 'energy', 'waste', 'peak', 'births', 'losses', 'rng', 'nextId']) assert(nonnegative(s[k]), k);
+  for (const k of ['time', 'tick', 'accumulator', 'food', 'energy', 'waste', 'peak', 'births', 'losses', 'rng', 'nextId', 'refundFood', 'refundEnergy']) assert(nonnegative(s[k]), k);
   assert(['founding', 'active', 'defeat'].includes(s.status) && [1, 2, 4].includes(s.speed) && typeof s.paused === 'boolean', 'game state');
   for (const k of ['ants', 'buildings', 'jobs', 'enemies', 'eggs', 'drops', 'effects', 'events', 'deliveries', 'unlocked']) assert(Array.isArray(s[k]), k);
   assert(s.queen && finite(s.queen.hp) && finite(s.queen.x) && finite(s.queen.y) && Array.isArray(s.queen.path), 'queen');
+  assert(s.queen.home && Number.isSafeInteger(s.queen.home.x) && Number.isSafeInteger(s.queen.home.y), 'queen home');
   assert(s.world && typeof s.world.dug === 'object' && s.world.dug && s.world.chunks && s.world.bounds && nonnegative(s.world.revision), 'world');
   for (const k of Object.keys(s.world.dug)) assert(/^-?\d+,\d+$/.test(k) && Number(k.split(',')[1]) > 0, 'terrain coordinates');
   assert(s.meta && nonnegative(s.meta.currency) && nonnegative(s.meta.runs) && Array.isArray(s.meta.awarded), 'legacy');
