@@ -1,0 +1,17 @@
+{
+  "name": "ant-colony",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An endless ant colony, built on a deterministic headless simulation.",
+  "scripts": {
+    "dev": "node scripts/server.mjs",
+    "start": "node scripts/server.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/server.mjs --dist",
+    "test": "node --test tests/*.test.js",
+    "test:balance": "node scripts/balance.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "engines": { "node": ">=22" }
+}
