@@ -128,6 +128,10 @@ export const combatSystem = {
     if (!Object.hasOwn(ENEMIES, source.type))
       damage *= lineageBoost(this.state, "military");
     target.hp -= damage * (1 - armor);
+    this.record(
+      `damage:${cause}`,
+      Math.min(target.hp + damage * (1 - armor), damage * (1 - armor)),
+    );
     target.lastDamage = this.state.time;
     target.lastHitBy = cause;
     this.effect(
@@ -283,9 +287,11 @@ export const combatSystem = {
         if (b) b.staff = b.staff.filter((id) => id !== a.id);
       }
       s.losses++;
+      this.record(`losses:${a.staffOf ? "staff" : a.crew}`);
     }
     s.ants = s.ants.filter((a) => a.hp > 0);
-    for (const e of s.enemies.filter((e) => e.hp <= 0 && !e.escaped))
+    for (const e of s.enemies.filter((e) => e.hp <= 0 && !e.escaped)) {
+      this.record(`kills:${e.type}`);
       s.drops.push({
         id: this.id("drop"),
         ...cell(e),
@@ -294,6 +300,7 @@ export const combatSystem = {
           Math.round(ENEMIES[e.type].cost * (0.4 + 0.1 * this.getStats().prey)),
         ),
       });
+    }
     s.enemies = s.enemies.filter((e) => e.hp > 0);
     // A reservation is released only by cancellation. Dead staff must be replaced by rebuilding.
   },

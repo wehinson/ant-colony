@@ -81,6 +81,7 @@ export const foragingSystem = {
         const amount = Math.min(a.cargo, Math.max(0, st.foodCap - s.food));
         if (amount > 0) {
           s.food += amount;
+          this.record("foodDelivered", amount);
           a.cargo -= amount;
           s.deliveries.push({ at: s.time, amount });
           this.effect("food", a, a, "#8b9e53", 1);
@@ -90,6 +91,7 @@ export const foragingSystem = {
           return;
         }
         a.cargo = 0;
+        this.record("tripsCompleted");
         a.phase = "idle";
         a.trip = null;
         if (a.pendingCrew) this._setCrew(a, a.pendingCrew);
@@ -157,6 +159,9 @@ export const foragingSystem = {
         );
         b.hp += hp;
         s.food = Math.max(0, s.food - hp * 0.12);
+        this.record("foodSpentRepairs", hp * 0.12);
+        this.record("energySpentRepairs", hp * 0.3);
+        this.record("structureHealthRepaired", hp);
         s.energy = Math.max(0, s.energy - hp * 0.3);
       }
       return;
@@ -170,6 +175,7 @@ export const foragingSystem = {
           Math.max(0, this.getStats().foodCap - s.food),
         );
         s.food += amount;
+        this.record("foodSalvaged", amount);
         drop.amount -= amount;
         if (drop.amount < 0.01)
           s.drops = s.drops.filter((d) => d.id !== drop.id);
