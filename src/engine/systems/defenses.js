@@ -1,36 +1,5 @@
-import { SpatialIndex } from "../spatial.js";
-import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
-  excavate,
-  isOpen,
-  neighbors,
-  entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
-  lineOfSight,
-} from "../world.js";
-
+import { BUILDINGS, ENEMIES, center, distance } from "../catalog.js";
+import { lineOfSight } from "../world.js";
 // Engine subsystem; methods share the colony state and headless services.
 export const defensesSystem = {
   _restaff(id) {

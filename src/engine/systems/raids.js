@@ -1,36 +1,5 @@
-import { SpatialIndex } from "../spatial.js";
-import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
-  excavate,
-  isOpen,
-  neighbors,
-  entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
-  lineOfSight,
-} from "../world.js";
-
+import { ENEMIES } from "../catalog.js";
+import { entrances } from "../world.js";
 // Engine subsystem; methods share the colony state and headless services.
 export const raidsSystem = {
   _makeRaid() {
@@ -77,7 +46,11 @@ export const raidsSystem = {
     const openings = entrances(s.world);
     const xs = openings.length ? openings.map((p) => p.x) : [0];
     const x =
-      direction === "west" ? Math.min(...xs) - 16 : Math.max(...xs) + 16;
+      xs.reduce(
+        (edge, x) =>
+          direction === "west" ? Math.min(edge, x) : Math.max(edge, x),
+        xs[0],
+      ) + (direction === "west" ? -16 : 16);
     return {
       number,
       budget,

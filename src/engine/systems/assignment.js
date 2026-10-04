@@ -1,36 +1,6 @@
 import { lineageFor, lineageBoost } from "../lineages.js";
-import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
-  excavate,
-  isOpen,
-  neighbors,
-  entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
-  lineOfSight,
-} from "../world.js";
-
+import { CREWS, cell, distance } from "../catalog.js";
+import { isOpen, neighbors, lineOfSight } from "../world.js";
 // Engine subsystem; methods share the colony state and headless services.
 export const assignmentSystem = {
   _assign(crew, delta) {

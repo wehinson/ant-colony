@@ -1,36 +1,11 @@
+import { cell, distance } from "../catalog.js";
 import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
-  excavate,
   isOpen,
   neighbors,
   entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
   pathDistance,
-  connected,
   lineOfSight,
 } from "../world.js";
-
 // Engine subsystem; methods share the colony state and headless services.
 export const foragingSystem = {
   _forage(a, dt, st) {
@@ -128,7 +103,12 @@ export const foragingSystem = {
     // Trip endpoints are simulation locations. Camera movement never changes them.
     const xs = entrances(s.world).map((p) => p.x);
     const destination = {
-      x: (side < 0 ? Math.min(...xs) : Math.max(...xs)) + side * 13,
+      x:
+        xs.reduce(
+          (edge, x) => (side < 0 ? Math.min(edge, x) : Math.max(edge, x)),
+          entry.x,
+        ) +
+        side * 13,
       y: 0,
     };
     a.trip = { entry, destination };

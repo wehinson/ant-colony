@@ -202,6 +202,7 @@ export function validateSave(s) {
     s.meta &&
       nonnegative(s.meta.currency) &&
       nonnegative(s.meta.runs) &&
+      Number.isSafeInteger(s.meta.runs) &&
       Array.isArray(s.meta.awarded),
     "legacy",
   );

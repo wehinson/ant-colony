@@ -1,36 +1,13 @@
 import { lineageBoost } from "../lineages.js";
+import { BUILDINGS, ENEMIES, key, cell, center, distance } from "../catalog.js";
 import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
   excavate,
   isOpen,
   neighbors,
   entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
   lineOfSight,
+  pathDistance,
 } from "../world.js";
-
 // Engine subsystem; methods share the colony state and headless services.
 export const combatSystem = {
   _controlArmy() {
@@ -114,7 +91,7 @@ export const combatSystem = {
         )
         .map((p) => ({ p, path: this.route(a, p) }))
         .filter((o) => o.path !== null)
-        .sort((x, y) => x.path.length - y.path.length)[0];
+        .sort((x, y) => pathDistance(a, x.path) - pathDistance(a, y.path))[0];
       if (approach) this.move(a, approach.p, this.workerSpeed(), dt);
       return;
     }

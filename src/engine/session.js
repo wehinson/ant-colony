@@ -142,6 +142,8 @@ export class GameSession {
     this.engine = ColonyEngine.deserialize(this.sandboxOriginal);
     this.sandboxOriginal = null;
     this.lastSaveAttempt = this.engine.state.time;
+    this.saveStatus =
+      "Real colony restored. Practice changes were kept separate.";
     return {
       ok: true,
       message: "Your real colony is restored exactly as you left it.",

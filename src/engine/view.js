@@ -50,7 +50,10 @@ export function getView(engine, selectedId = null) {
   )
     objective = {
       title: "Give your colony room to grow.",
-      text: "Assign a worker to Dig. Place Food Storage beside the queen’s chamber.",
+      text:
+        st.population < 2
+          ? "Keep the first worker gathering food. Assign a digger when the next worker hatches."
+          : "Assign a worker to Dig. Place Food Storage beside the queen’s chamber.",
       icon: "pick",
     };
   else if (!military)
@@ -100,7 +103,8 @@ export function getView(engine, selectedId = null) {
   } else {
     urgency = "danger";
     raidTitle = `Raid ${r.number} · wave ${r.wave}/${r.plan.waves.length}`;
-    raidDetail = `${s.enemies.length + r.pending.length} attackers remain · ${r.plan.direction}`;
+    const remaining = s.enemies.length + r.pending.length;
+    raidDetail = `${remaining} ${remaining === 1 ? "attacker remains" : "attackers remain"} · ${r.plan.direction}`;
     raidTimer = "DEFEND";
   }
   const catalog = Object.entries(BUILDINGS).map(([type, d]) => {
@@ -223,7 +227,7 @@ export function getView(engine, selectedId = null) {
   if (s.status === "active" && !s.buildings.some((b) => b.type === "queen"))
     alerts.push({
       icon: "crown",
-      text: `Queen’s Chamber lost. Rebuild at (${s.queen.home.x}, ${s.queen.home.y}) to resume brood production.`,
+      text: `Queen’s Chamber lost. Rebuild at (${s.queen.home.x}, ${s.queen.home.y}) to restore its brood slots.`,
       kind: "danger",
     });
   if (waitingCargo || s.food >= st.foodCap - 0.01)
@@ -300,10 +304,12 @@ export function getView(engine, selectedId = null) {
     foodPercent: (s.food / st.foodCap) * 100,
     income: `${st.income.toFixed(1)}/min`,
     energy: Math.floor(s.energy),
-    energyCap: st.energyCap,
+    energyCap: Math.floor(st.energyCap),
     energyPercent: (s.energy / st.energyCap) * 100,
     recovery: `+${st.recovery.toFixed(2)}/s`,
     population: st.population,
+    populationUnit: st.population === 1 ? "ant" : "ants",
+    populationLabel: `${st.population} ${st.population === 1 ? "ant" : "ants"}`,
     mobile: st.counts.warrior,
     mobileCap: st.mobileCap,
     committed: st.committed,
@@ -330,6 +336,7 @@ export function getView(engine, selectedId = null) {
       timer: raidTimer,
       urgency,
       highest: r.highest,
+      survived: `${r.highest} ${r.highest === 1 ? "raid" : "raids"} survived`,
     },
     events: s.events
       .slice(0, 12)
