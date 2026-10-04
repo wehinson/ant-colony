@@ -1,3 +1,4 @@
+import { lineageBoost } from "../lineages.js";
 import {
   VERSION,
   STEP,
@@ -124,6 +125,8 @@ export const combatSystem = {
   hit(target, damage, source, cause) {
     if (target.hp <= 0) return;
     const armor = ENEMIES[target.type]?.armor || 0;
+    if (!Object.hasOwn(ENEMIES, source.type))
+      damage *= lineageBoost(this.state, "military");
     target.hp -= damage * (1 - armor);
     target.lastDamage = this.state.time;
     target.lastHitBy = cause;

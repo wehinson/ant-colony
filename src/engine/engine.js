@@ -1,7 +1,9 @@
+import { prestigeSystem } from "./systems/prestige.js";
 import { defensesSystem } from "./systems/defenses.js";
 import { raidsSystem } from "./systems/raids.js";
 import { combatSystem } from "./systems/combat.js";
 import { SpatialIndex } from "./spatial.js";
+import { lineageFor, lineageBoost } from "./lineages.js";
 import { foragingSystem } from "./systems/foraging.js";
 import { assignmentSystem } from "./systems/assignment.js";
 import { roomsSystem } from "./systems/rooms.js";
@@ -54,6 +56,7 @@ const freshState = (seed, meta) => ({
   raidRng: ((seed >>> 0) ^ 0x9e3779b9) >>> 0,
   id: `colony-${meta.runs + 1}-${seed >>> 0}`,
   meta: structuredClone(meta),
+  lineage: { generation: meta.runs },
   time: 0,
   tick: 0,
   accumulator: 0,
@@ -69,20 +72,31 @@ const freshState = (seed, meta) => ({
     bounds: { minX: -18, maxX: 18, maxY: 18 },
     revision: 0,
   },
-  food: 12 + 12 * meta.upgrades.founding,
-  energy: 70 + 20 * meta.upgrades.founding,
+  food:
+    12 * lineageBoost({ lineage: { generation: meta.runs } }, "founding") +
+    12 * meta.upgrades.founding,
+  energy:
+    70 * lineageBoost({ lineage: { generation: meta.runs } }, "founding") +
+    20 * meta.upgrades.founding,
   waste: 0,
   refundFood: 0,
   refundEnergy: 0,
   queen: {
     id: "queen",
+    color: lineageFor(meta.runs).color,
     x: 0,
     y: 0,
     previousX: 0,
     previousY: 0,
     home: { x: -1, y: 3 },
-    hp: 300 * (1 + 0.15 * meta.upgrades.military),
-    maxHp: 300 * (1 + 0.15 * meta.upgrades.military),
+    hp:
+      300 *
+      (1 + 0.15 * meta.upgrades.military) *
+      lineageBoost({ lineage: { generation: meta.runs } }, "military"),
+    maxHp:
+      300 *
+      (1 + 0.15 * meta.upgrades.military) *
+      lineageBoost({ lineage: { generation: meta.runs } }, "military"),
     cooldown: 0,
     path: [],
     jobId: null,
@@ -193,24 +207,37 @@ export class ColonyEngine {
       if (a.pendingCrew) pending[a.pendingCrew]++;
     }
     const committed = s.ants.filter((a) => a.staffOf).length;
-    const foodCap = 30 + 15 * s.meta.upgrades.founding + sum("storage") * 90;
-    const energyCap = 70 + s.meta.upgrades.founding * 20 + sum("quarters") * 55;
+    const foodCap =
+      30 * lineageBoost(s, "founding") +
+      15 * s.meta.upgrades.founding +
+      sum("storage") * 90;
+    const energyCap =
+      70 * lineageBoost(s, "founding") +
+      s.meta.upgrades.founding * 20 +
+      sum("quarters") * 55;
     const recovery =
       0.5 +
       (s.food > 0 ? 0.35 : 0) +
       sum("quarters") * 1.2 +
-      s.meta.upgrades.excavation * 0.15;
+      s.meta.upgrades.excavation * 0.15 +
+      (lineageBoost(s, "excavation") - 1) * 0.85;
     const efficiency = clamp(1 - Math.max(0, s.waste - 30) / 550, 0.45, 1);
     const slots = sum("queen") + sum("brood") * 2;
     const mobileCap = 2 + sum("barracks") * 8 + s.meta.upgrades.military * 2;
     const carry =
-      (6 + s.research.carry * 2) * (1 + 0.15 * s.meta.upgrades.foraging);
+      (6 + s.research.carry * 2) *
+      (1 + 0.15 * s.meta.upgrades.foraging) *
+      lineageBoost(s, "foraging");
     const income =
       (s.deliveries.reduce((n, d) => n + d.amount, 0) /
         Math.max(1, Math.min(60, s.time))) *
       60;
-    const eggCost = Math.max(2, 5 / (1 + 0.08 * s.meta.upgrades.brood));
-    const eggDuration = 20 / (1 + 0.12 * s.meta.upgrades.brood);
+    const eggCost = Math.max(
+      2,
+      5 / ((1 + 0.08 * s.meta.upgrades.brood) * lineageBoost(s, "brood")),
+    );
+    const eggDuration =
+      20 / ((1 + 0.12 * s.meta.upgrades.brood) * lineageBoost(s, "brood"));
     return {
       counts,
       pending,
@@ -569,53 +596,6 @@ export class ColonyEngine {
     });
     if (this.state.effects.length > 160) this.state.effects.shift();
   }
-  prestigeAward() {
-    const s = this.state;
-    return Math.max(1, s.raid.highest * 4 + Math.floor(Math.sqrt(s.peak)));
-  }
-  _defeat() {
-    const s = this.state;
-    if (s.status === "defeat") return;
-    s.queen.hp = 0;
-    s.status = "defeat";
-    s.paused = true;
-    const earned = this.prestigeAward();
-    s.result = {
-      highestRaid: s.raid.highest,
-      peak: s.peak,
-      time: s.time,
-      cause: s.queen.lastHitBy || "An enemy breached the queen’s defenses",
-      earned,
-    };
-    if (!s.meta.awarded.includes(s.id)) {
-      s.meta.currency += earned;
-      s.meta.runs++;
-      s.meta.awarded.push(s.id);
-      s.meta.bestRaid = Math.max(s.meta.bestRaid, s.raid.highest);
-      s.meta.bestPopulation = Math.max(s.meta.bestPopulation, s.peak);
-      s.meta.bestTime = Math.max(s.meta.bestTime, s.time);
-    }
-    this.log(
-      "The queen has fallen",
-      `${s.result.cause}. Your colony’s legacy carries forward.`,
-      "danger",
-    );
-  }
-  _buyPrestige(branch) {
-    const s = this.state,
-      d = PERMANENT[branch];
-    if (!Object.hasOwn(PERMANENT, branch) || s.status !== "defeat")
-      return this.notify(
-        "Permanent improvements are available between colonies.",
-      );
-    const level = s.meta.upgrades[branch],
-      cost = d.base + level * 2;
-    if (s.meta.currency < cost)
-      return this.notify(`Needs ${cost} legacy seeds.`);
-    s.meta.currency -= cost;
-    s.meta.upgrades[branch]++;
-    return this.ok(`${d.name} improved. This applies to your next colony.`);
-  }
   serialize() {
     return JSON.stringify({
       format: "ant-colony",
@@ -638,6 +618,13 @@ export class ColonyEngine {
     if (parsed.state && typeof parsed.state === "object") {
       parsed.state.refundFood ??= 0;
       parsed.state.raidRng ??= parsed.state.rng;
+      if (parsed.state.meta)
+        parsed.state.lineage ??= {
+          generation: Math.max(
+            0,
+            parsed.state.meta.runs - (parsed.state.status === "defeat" ? 1 : 0),
+          ),
+        };
       parsed.state.refundEnergy ??= 0;
       if (parsed.state.queen && !parsed.state.queen.home) {
         const home =
@@ -670,6 +657,8 @@ Object.assign(ColonyEngine.prototype, raidsSystem);
 
 Object.assign(ColonyEngine.prototype, defensesSystem);
 
+Object.assign(ColonyEngine.prototype, prestigeSystem);
+
 function validateSave(s) {
   const finite = (x) => typeof x === "number" && Number.isFinite(x),
     nonnegative = (x) => finite(x) && x >= 0;
@@ -684,6 +673,12 @@ function validateSave(s) {
     if (!test) throw new Error(`Invalid save: ${message}.`);
   };
   assert(s && typeof s === "object", "missing colony");
+  assert(
+    s.lineage &&
+      Number.isSafeInteger(s.lineage.generation) &&
+      s.lineage.generation >= 0,
+    "ant lineage",
+  );
   assert(
     typeof s.id === "string" &&
       s.id.length < 200 &&

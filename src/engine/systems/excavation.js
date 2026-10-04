@@ -1,3 +1,4 @@
+import { lineageBoost } from "../lineages.js";
 import {
   VERSION,
   STEP,
@@ -89,6 +90,7 @@ export const excavationSystem = {
     const hardness = 2.8 + terrainValue(s.seed, job.x, job.y) * 1.1;
     const rate =
       (1 + s.meta.upgrades.excavation * 0.18) *
+      lineageBoost(s, "excavation") *
       st.efficiency *
       (queen ? 1.5 + s.meta.upgrades.founding * 0.35 : 1);
     job.progress = Math.min(1, job.progress + (work * rate) / hardness);
