@@ -93,6 +93,15 @@ export const raidsSystem = {
       r = s.raid;
     if (r.phase === "peace" && s.time >= r.nextAt - r.warning) {
       r.plan = this._makeRaid();
+      s.metrics.raids.push({
+        number: r.plan.number,
+        warningAt: s.time,
+        budget: r.plan.budget,
+        waves: r.plan.waves.map((w) => [...w]),
+        direction: r.plan.direction,
+        completedAt: null,
+      });
+      if (s.metrics.raids.length > 100) s.metrics.raids.shift();
       r.phase = "warning";
       this.log(
         `Raid ${r.plan.number} approaching`,
@@ -124,6 +133,10 @@ export const raidsSystem = {
         );
       } else {
         r.highest = r.number;
+        const record = s.metrics.raids.findLast(
+          (row) => row.number === r.number,
+        );
+        if (record) record.completedAt = s.time;
         r.phase = "peace";
         r.lastEnded = s.time;
         r.nextAt = s.time + 450;
@@ -173,6 +186,7 @@ export const raidsSystem = {
       warned: false,
     };
     s.enemies.push(e);
+    this.record(`spawned:${type}`);
     return e;
   },
 };

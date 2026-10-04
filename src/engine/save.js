@@ -11,6 +11,7 @@ import {
   validTile,
 } from "./catalog.js";
 import { isOpen } from "./world.js";
+import { createMetrics } from "./metrics.js";
 export function decodeSave(text) {
   if (typeof text !== "string") throw new Error("Save file is invalid.");
   let parsed;
@@ -24,6 +25,7 @@ export function decodeSave(text) {
   // Keep early v1 local saves compatible with reservation accounting.
   if (parsed.state && typeof parsed.state === "object") {
     parsed.state.version = VERSION;
+    parsed.state.metrics ??= createMetrics(parsed.state.time || 0);
     parsed.state.refundFood ??= 0;
     parsed.state.raidRng ??= parsed.state.rng;
     if (parsed.state.meta)
@@ -64,6 +66,17 @@ export function validateSave(s) {
     if (!test) throw new Error(`Invalid save: ${message}.`);
   };
   assert(s && typeof s === "object", "missing colony");
+  assert(
+    s.metrics &&
+      nonnegative(s.metrics.since) &&
+      nonnegative(s.metrics.nextSample) &&
+      s.metrics.counters &&
+      Object.values(s.metrics.counters).every(nonnegative) &&
+      Array.isArray(s.metrics.samples) &&
+      Array.isArray(s.metrics.commands) &&
+      Array.isArray(s.metrics.raids),
+    "diagnostics",
+  );
   assert(
     Number.isSafeInteger(s.tick) &&
       Number.isSafeInteger(s.nextId) &&

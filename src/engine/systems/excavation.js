@@ -95,8 +95,10 @@ export const excavationSystem = {
       (queen ? 1.5 + s.meta.upgrades.founding * 0.35 : 1);
     job.progress = Math.min(1, job.progress + (work * rate) / hardness);
     s.energy -= energy;
+    this.record("energySpentDigging", energy);
     if (job.progress >= 1) {
       excavate(s.world, job.x, job.y);
+      this.record("tilesExcavated");
       s.jobs = s.jobs.filter((j) => j.id !== job.id);
       a.jobId = null;
       this.effect("dig", job, job, "#b69a72", 0.5);

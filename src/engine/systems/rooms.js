@@ -138,6 +138,8 @@ export const roomsSystem = {
       id = this.id("building");
     const foodCost = type === "queen" && s.status !== "founding" ? 24 : d.food;
     s.food -= foodCost;
+    this.record("foodSpentConstruction", foodCost);
+    this.record("energySpentConstruction", d.energy);
     s.energy -= d.energy;
     const staff = s.ants
       .filter((a) => a.crew === "warrior" && !a.staffOf && !a.pendingCrew)
@@ -247,6 +249,8 @@ export const roomsSystem = {
     if (b.upgrading && cost.staff === 0)
       return this.notify("An upgrade is already queued.");
     s.food -= cost.food;
+    this.record("foodSpentUpgrades", cost.food);
+    this.record("energySpentUpgrades", cost.energy);
     s.energy -= cost.energy;
     for (const a of staff.slice(0, cost.staff)) {
       a.staffOf = b.id;
@@ -272,6 +276,7 @@ export const roomsSystem = {
         b.staff.length >= d.staff
       ) {
         b.complete = true;
+        this.record(`completed:${b.type}`);
         const index = ECONOMIC.indexOf(b.type);
         if (
           index >= 0 &&
@@ -350,6 +355,7 @@ export const roomsSystem = {
             Math.max(0, this.getStats().foodCap - s.food),
           );
           s.food += amount;
+          this.record("foodFromPrey", amount);
           drop.amount -= amount;
           if (drop.amount < 0.001)
             s.drops = s.drops.filter((d) => d.id !== drop.id);
@@ -419,7 +425,10 @@ export const roomsSystem = {
       const slots = b.level * (b.type === "brood" ? 2 : 1);
       let used = s.eggs.filter((e) => e.buildingId === b.id).length;
       while (used < slots && (s.freeEgg || s.food >= st.eggCost)) {
-        if (!s.freeEgg) s.food -= st.eggCost;
+        if (!s.freeEgg) {
+          s.food -= st.eggCost;
+          this.record("foodSpentEggs", st.eggCost);
+        }
         s.freeEgg = false;
         s.eggs.push({ id: this.id("egg"), buildingId: b.id, progress: 0 });
         used++;

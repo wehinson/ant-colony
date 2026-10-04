@@ -1,4 +1,5 @@
 import { decodeSave } from "./save.js";
+import { createMetrics, metricsSystem } from "./metrics.js";
 import { prestigeSystem } from "./systems/prestige.js";
 import { defensesSystem } from "./systems/defenses.js";
 import { raidsSystem } from "./systems/raids.js";
@@ -58,6 +59,7 @@ const freshState = (seed, meta) => ({
   id: `colony-${meta.runs + 1}-${seed >>> 0}`,
   meta: structuredClone(meta),
   lineage: { generation: meta.runs },
+  metrics: createMetrics(),
   time: 0,
   tick: 0,
   accumulator: 0,
@@ -267,6 +269,19 @@ export class ColonyEngine {
       : this.state.unlocked.includes(type);
   }
   command(c) {
+    const result = this._command(c);
+    const s = this.state;
+    this.record(result.ok ? "ordersAccepted" : "ordersRejected");
+    s.metrics.commands.push({
+      time: s.time,
+      type: String(c?.type || "invalid").slice(0, 40),
+      ok: result.ok,
+      message: result.message,
+    });
+    if (s.metrics.commands.length > 256) s.metrics.commands.shift();
+    return result;
+  }
+  _command(c) {
     if (!c || typeof c.type !== "string")
       return this.notify("Invalid command.");
     const s = this.state;
@@ -419,6 +434,7 @@ export class ColonyEngine {
     if (s.food < cost) return this.notify(`Needs ${cost} food.`);
     if (s.pendingResearch) return this.notify("Another improvement is queued.");
     s.food -= cost;
+    this.record("foodSpentResearch", cost);
     s.pendingResearch = name;
     return this.ok("Colony improvement queued.");
   }
@@ -547,7 +563,7 @@ export class ColonyEngine {
     this._queen(dt, st);
     this._brood(dt, st);
     this._raids(dt);
-    if (this.useSpatial !== false)
+    if (this.useSpatial !== false && s.enemies.length && s.ants.length > 32)
       this._spatial = {
         ants: new SpatialIndex(s.ants),
         enemies: new SpatialIndex(s.enemies),
@@ -575,6 +591,7 @@ export class ColonyEngine {
       for (const a of s.ants) a.hp = Math.min(a.maxHp, a.hp + dt * 0.65);
     }
     s.peak = Math.max(s.peak, s.ants.length);
+    this.observe(dt);
     this._presentation = null;
   }
   near(kind, point, radius) {
@@ -624,3 +641,4 @@ Object.assign(ColonyEngine.prototype, raidsSystem);
 Object.assign(ColonyEngine.prototype, defensesSystem);
 
 Object.assign(ColonyEngine.prototype, prestigeSystem);
+Object.assign(ColonyEngine.prototype, metricsSystem);

@@ -6,11 +6,12 @@ export function lineageFor(generation = 0) {
   return { ...ant, generation, cycle: Math.floor(generation / 50) + 1 };
 }
 export function lineageBoost(state, branch) {
-  const ant = lineageFor(state.lineage.generation);
+  const generation = state.lineage.generation;
+  const ant = ANT_LINEAGES[49 - (generation % 50)];
   return (
     1 +
-    ant.generation * 0.035 +
-    (ant.generation > 0 && ant.affinity === branch ? 0.08 : 0)
+    generation * 0.035 +
+    (generation > 0 && ant.affinity === branch ? 0.08 : 0)
   );
 }
 export function lineageView(state) {

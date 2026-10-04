@@ -101,12 +101,14 @@ export const defensesSystem = {
     const s = this.state,
       b = s.buildings.find((b) => b.id === id);
     if (!b) return;
+    this.record(`destroyed:${b.type}`);
     for (const a of s.ants) if (a.staffOf === id) a.hp = 0;
     s.eggs = s.eggs.filter((e) => e.buildingId !== id);
     s.buildings = s.buildings.filter((o) => o.id !== id);
     for (const j of [...s.jobs]) if (j.blueprint === id) this._cancelJob(j.id);
     s.world.revision++;
     const st = this.getStats();
+    this.record("foodLostWithStorage", Math.max(0, s.food - st.foodCap));
     s.food = Math.min(s.food, st.foodCap);
     s.energy = Math.min(s.energy, st.energyCap);
     if (s.queen.relocation?.buildingId === id) s.queen.relocation = null;
