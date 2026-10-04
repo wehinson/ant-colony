@@ -1,3 +1,4 @@
+import { raidsSystem } from "./systems/raids.js";
 import { combatSystem } from "./systems/combat.js";
 import { SpatialIndex } from "./spatial.js";
 import { foragingSystem } from "./systems/foraging.js";
@@ -49,6 +50,7 @@ const freshState = (seed, meta) => ({
   version: VERSION,
   seed: seed >>> 0 || 1,
   rng: seed >>> 0 || 1,
+  raidRng: ((seed >>> 0) ^ 0x9e3779b9) >>> 0,
   id: `colony-${meta.runs + 1}-${seed >>> 0}`,
   meta: structuredClone(meta),
   time: 0,
@@ -150,11 +152,11 @@ export class ColonyEngine {
       );
     }
   }
-  random() {
-    let t = (this.state.rng += 0x6d2b79f5);
+  random(stream = "rng") {
+    let t = (this.state[stream] += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    this.state.rng >>>= 0;
+    this.state[stream] >>>= 0;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
   id(prefix) {
@@ -605,144 +607,6 @@ export class ColonyEngine {
       );
     }
   }
-  _makeRaid() {
-    const s = this.state,
-      raid = s.raid,
-      number = raid.number + 1;
-    const budget = Math.floor(10 + (s.time / 210) ** 1.8 * 4.6),
-      waveCount = Math.min(6, 2 + Math.floor((number - 1) / 2));
-    const direction = this.random() < 0.5 ? "west" : "east",
-      waves = [],
-      roster = Object.keys(ENEMIES).filter(
-        (k) =>
-          ENEMIES[k].minRaid <= number &&
-          (!["wasp", "tunneller"].includes(k) || this.unlocked("outpost")),
-      );
-    for (let w = 0; w < waveCount; w++) {
-      let remaining = Math.max(
-          4,
-          Math.floor((budget / waveCount) * (0.85 + w * 0.18)),
-        ),
-        special = 0;
-      const wave = [];
-      while (remaining >= 1) {
-        const pool = roster.filter(
-          (k) =>
-            ENEMIES[k].cost <= remaining &&
-            (special < 2 ||
-              !["wasp", "tunneller", "spider", "thief"].includes(k)),
-        );
-        if (!pool.length) break;
-        let type = pool[Math.floor(this.random() * pool.length)];
-        if (number === 1) type = "scout";
-        if (ENEMIES[type].cost > remaining) break;
-        wave.push(type);
-        remaining -= ENEMIES[type].cost;
-        if (["wasp", "tunneller", "spider", "thief"].includes(type)) special++;
-      }
-      waves.push(wave);
-    }
-    const openings = entrances(s.world);
-    const xs = openings.length ? openings.map((p) => p.x) : [0];
-    const x =
-      direction === "west" ? Math.min(...xs) - 16 : Math.max(...xs) + 16;
-    return {
-      number,
-      budget,
-      direction,
-      waves,
-      spawn: { x, y: 0 },
-      threat: [...new Set(waves.flat())].map((k) => ENEMIES[k].name).join(", "),
-      fixedAt: s.time,
-    };
-  }
-  _raids() {
-    const s = this.state,
-      r = s.raid;
-    if (r.phase === "peace" && s.time >= r.nextAt - r.warning) {
-      r.plan = this._makeRaid();
-      r.phase = "warning";
-      this.log(
-        `Raid ${r.plan.number} approaching`,
-        `${r.plan.direction === "west" ? "West" : "East"} approach. ${r.plan.threat}. Workers seek shelter.`,
-        "warning",
-      );
-    }
-    if (r.phase === "warning" && s.time >= r.nextAt) {
-      r.phase = "active";
-      r.number = r.plan.number;
-      r.wave = 0;
-      r.startedAt = s.time;
-      r.waveAt = s.time;
-      this._startWave();
-    }
-    if (r.phase === "intermission" && s.time >= r.waveAt) this._startWave();
-    if (r.phase !== "active") return;
-    if (r.pending.length && s.time >= r.spawnAt) {
-      this.spawnEnemy(r.pending.shift(), r.plan.spawn);
-      r.spawnAt = s.time + 1.4;
-    }
-    if (!r.pending.length && !s.enemies.some((e) => e.hp > 0)) {
-      if (r.wave < r.plan.waves.length) {
-        r.phase = "intermission";
-        r.waveAt = s.time + 20;
-        this.log(
-          "A moment to breathe",
-          `Wave ${r.wave} cleared. The next wave arrives in 20 seconds.`,
-        );
-      } else {
-        r.highest = r.number;
-        r.phase = "peace";
-        r.lastEnded = s.time;
-        r.nextAt = s.time + 450;
-        r.plan = null;
-        this.log(
-          `Raid ${r.number} survived`,
-          "Repair your defenses, recover, and prepare. The next raid is growing stronger.",
-          "milestone",
-        );
-      }
-    }
-  }
-  _startWave() {
-    const s = this.state,
-      r = s.raid;
-    r.phase = "active";
-    r.pending = [...r.plan.waves[r.wave]];
-    r.wave++;
-    r.spawnAt = s.time;
-    this.log(
-      `Raid ${r.number} · wave ${r.wave}`,
-      `${r.pending.length} attackers approach from the ${r.plan.direction}.`,
-      "danger",
-    );
-  }
-  spawnEnemy(type, position) {
-    const s = this.state,
-      d = ENEMIES[type],
-      strengthTime = s.raid.plan?.fixedAt ?? s.time,
-      scale = 1 + Math.max(0, strengthTime - 350) / 700;
-    const p = { x: position.x, y: d.flying ? -1 : position.y };
-    const e = {
-      id: this.id("enemy"),
-      type,
-      ...p,
-      previousX: p.x,
-      previousY: p.y,
-      hp: d.hp * scale,
-      maxHp: d.hp * scale,
-      damage: d.damage * (1 + Math.max(0, strengthTime - 350) / 1400),
-      cooldown: 0,
-      path: [],
-      slowUntil: 0,
-      blockedBy: null,
-      stolen: false,
-      tunnelProgress: 0,
-      warned: false,
-    };
-    s.enemies.push(e);
-    return e;
-  }
   destroyBuilding(id) {
     const s = this.state,
       b = s.buildings.find((b) => b.id === id);
@@ -830,6 +694,7 @@ export class ColonyEngine {
     // Keep early v1 local saves compatible with reservation accounting.
     if (parsed.state && typeof parsed.state === "object") {
       parsed.state.refundFood ??= 0;
+      parsed.state.raidRng ??= parsed.state.rng;
       parsed.state.refundEnergy ??= 0;
       if (parsed.state.queen && !parsed.state.queen.home) {
         const home =
@@ -857,6 +722,8 @@ Object.assign(ColonyEngine.prototype, assignmentSystem);
 Object.assign(ColonyEngine.prototype, foragingSystem);
 
 Object.assign(ColonyEngine.prototype, combatSystem);
+
+Object.assign(ColonyEngine.prototype, raidsSystem);
 
 function validateSave(s) {
   const finite = (x) => typeof x === "number" && Number.isFinite(x),
@@ -889,6 +756,7 @@ function validateSave(s) {
     "births",
     "losses",
     "rng",
+    "raidRng",
     "nextId",
     "refundFood",
     "refundEnergy",
