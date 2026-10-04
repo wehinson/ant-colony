@@ -1,0 +1,31 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { fixture, room } from "./helpers.js";
+import { excavate } from "../src/engine/world.js";
+import { footprint } from "../src/engine/catalog.js";
+test("queen relocation reserves its destination and stops at the warning boundary", () => {
+  const e = fixture();
+  for (const p of footprint("queen", 2, 3)) excavate(e.state.world, p.x, p.y);
+  assert.ok(e.command({ type: "relocate", x: 2, y: 3 }).ok);
+  assert.match(e.preview("storage", 2, 3).reason, /reserved/);
+  e.state.raid.nextAt = e.state.time + 50.1;
+  e.advance(0.1, { exact: true });
+  assert.equal(e.state.queen.relocation, null);
+  assert.equal(e.state.raid.phase, "warning");
+});
+test("prey cannot pass a closed barricade and captured food waits for storage space", () => {
+  const e = fixture();
+  const b = room(e, "prey", 2, 3);
+  const wall = room(e, "barricade", 0, 1);
+  b.captureAt = e.state.time;
+  e.advance(30, { exact: true });
+  assert.ok(e.state.drops.some((d) => d.captureTarget === b.id));
+  assert.ok(e.state.drops.every((d) => d.y === 0));
+  e.destroyBuilding(wall.id);
+  e.state.food = e.getStats().foodCap;
+  e.advance(10, { exact: true });
+  assert.ok(e.state.drops.some((d) => d.captureTarget === b.id));
+  e.state.food = 0;
+  e.advance(0.1, { exact: true });
+  assert.ok(e.state.food > 0);
+});
