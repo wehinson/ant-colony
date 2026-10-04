@@ -174,20 +174,29 @@ export function getView(engine, selectedId = null) {
         hp: selected.hp,
         maxHp: selected.maxHp,
         level: selected.level,
-        condition: selected.complete
-          ? `${Math.ceil(selected.hp)} / ${Math.ceil(selected.maxHp)} health`
-          : footprint(selected.type, selected.x, selected.y).some(
-                (p) => !isOpen(s.world, p.x, p.y),
-              )
-            ? "Waiting for excavation"
-            : selected.staff.some((id) => {
-                  const a = s.ants.find((a) => a.id === id);
-                  return (
-                    a && Math.hypot(a.x - selected.x, a.y - selected.y) > 0.8
-                  );
-                })
-              ? "Staff are on their way"
-              : "Needs tunnel connection",
+        missingStaff: Math.max(
+          0,
+          BUILDINGS[selected.type].staff - selected.staff.length,
+        ),
+        condition:
+          !selected.complete &&
+          selected.staff.length < BUILDINGS[selected.type].staff
+            ? `Needs ${BUILDINGS[selected.type].staff - selected.staff.length} replacement warriors`
+            : selected.complete
+              ? `${Math.ceil(selected.hp)} / ${Math.ceil(selected.maxHp)} health`
+              : footprint(selected.type, selected.x, selected.y).some(
+                    (p) => !isOpen(s.world, p.x, p.y),
+                  )
+                ? "Waiting for excavation"
+                : selected.staff.some((id) => {
+                      const a = s.ants.find((a) => a.id === id);
+                      return (
+                        a &&
+                        Math.hypot(a.x - selected.x, a.y - selected.y) > 0.8
+                      );
+                    })
+                  ? "Staff are on their way"
+                  : "Needs tunnel connection",
         cost: engine.upgradeCost(selected),
         canRelocate:
           selected.type === "queen" &&

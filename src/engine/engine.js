@@ -1,3 +1,4 @@
+import { defensesSystem } from "./systems/defenses.js";
 import { raidsSystem } from "./systems/raids.js";
 import { combatSystem } from "./systems/combat.js";
 import { SpatialIndex } from "./spatial.js";
@@ -319,6 +320,8 @@ export class ColonyEngine {
       }
       case "cancel":
         return this._cancelBlueprint(c.id);
+      case "restaff":
+        return this._restaff(c.id);
       case "upgrade":
         return this._upgrade(c.id);
       case "research":
@@ -566,66 +569,6 @@ export class ColonyEngine {
     });
     if (this.state.effects.length > 160) this.state.effects.shift();
   }
-  _defenses(dt) {
-    const s = this.state;
-    for (const b of s.buildings.filter((b) => b.complete)) {
-      const d = BUILDINGS[b.type];
-      b.cooldown = Math.max(0, b.cooldown - dt);
-      if (!d.range || b.cooldown > 0) continue;
-      const p = center(b),
-        targets = s.enemies
-          .filter(
-            (e) =>
-              e.hp > 0 &&
-              distance(p, e) <= d.range &&
-              (!ENEMIES[e.type].flying || e.y >= 0 || d.flying) &&
-              lineOfSight(s.world, p, e),
-          )
-          .sort((a, b) => distance(a, s.queen) - distance(b, s.queen));
-      if (!targets.length) continue;
-      b.cooldown = d.cooldown / (1 + (b.level - 1) * 0.08);
-      const affected = d.splash
-        ? targets.filter((e) => distance(e, targets[0]) < d.splash)
-        : [targets[0]];
-      for (const e of affected) {
-        if (d.slow) e.slowUntil = s.time + 5;
-        else
-          this.hit(
-            e,
-            d.damage *
-              (1 + (b.level - 1) * 0.35 + s.meta.upgrades.military * 0.15),
-            p,
-            d.name,
-          );
-      }
-      this.effect(
-        d.splash ? "spray" : d.slow ? "snare" : "shot",
-        p,
-        targets[0],
-        d.color,
-        d.splash ? 0.6 : 0.25,
-      );
-    }
-  }
-  destroyBuilding(id) {
-    const s = this.state,
-      b = s.buildings.find((b) => b.id === id);
-    if (!b) return;
-    for (const a of s.ants) if (a.staffOf === id) a.hp = 0;
-    s.eggs = s.eggs.filter((e) => e.buildingId !== id);
-    s.buildings = s.buildings.filter((o) => o.id !== id);
-    for (const j of [...s.jobs]) if (j.blueprint === id) this._cancelJob(j.id);
-    s.world.revision++;
-    const st = this.getStats();
-    s.food = Math.min(s.food, st.foodCap);
-    s.energy = Math.min(s.energy, st.energyCap);
-    if (s.queen.relocation?.buildingId === id) s.queen.relocation = null;
-    this.log(
-      "Structure lost",
-      `${BUILDINGS[b.type].name} was destroyed. Its tunnels remain.`,
-      "danger",
-    );
-  }
   prestigeAward() {
     const s = this.state;
     return Math.max(1, s.raid.highest * 4 + Math.floor(Math.sqrt(s.peak)));
@@ -724,6 +667,8 @@ Object.assign(ColonyEngine.prototype, foragingSystem);
 Object.assign(ColonyEngine.prototype, combatSystem);
 
 Object.assign(ColonyEngine.prototype, raidsSystem);
+
+Object.assign(ColonyEngine.prototype, defensesSystem);
 
 function validateSave(s) {
   const finite = (x) => typeof x === "number" && Number.isFinite(x),
