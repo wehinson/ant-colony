@@ -26,6 +26,7 @@ export function decodeSave(text) {
   if (parsed.state && typeof parsed.state === "object") {
     parsed.state.version = VERSION;
     parsed.state.metrics ??= createMetrics(parsed.state.time || 0);
+    parsed.state.debug ??= { enabled: false, modified: false };
     parsed.state.refundFood ??= 0;
     parsed.state.raidRng ??= parsed.state.rng;
     if (parsed.state.meta)
@@ -66,6 +67,12 @@ export function validateSave(s) {
     if (!test) throw new Error(`Invalid save: ${message}.`);
   };
   assert(s && typeof s === "object", "missing colony");
+  assert(
+    s.debug &&
+      typeof s.debug.enabled === "boolean" &&
+      typeof s.debug.modified === "boolean",
+    "practice state",
+  );
   assert(
     s.metrics &&
       nonnegative(s.metrics.since) &&
@@ -423,7 +430,7 @@ export function validateSave(s) {
         nonnegative(s.result.time) &&
         typeof s.result.cause === "string" &&
         s.queen.hp === 0 &&
-        s.meta.awarded.includes(s.id)),
+        (s.debug.enabled || s.meta.awarded.includes(s.id))),
     "defeat record",
   );
 }

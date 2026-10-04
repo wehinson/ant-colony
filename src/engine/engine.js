@@ -1,5 +1,6 @@
 import { decodeSave } from "./save.js";
 import { createMetrics, metricsSystem } from "./metrics.js";
+import { debugSystem } from "./debug.js";
 import { prestigeSystem } from "./systems/prestige.js";
 import { defensesSystem } from "./systems/defenses.js";
 import { raidsSystem } from "./systems/raids.js";
@@ -60,6 +61,7 @@ const freshState = (seed, meta) => ({
   meta: structuredClone(meta),
   lineage: { generation: meta.runs },
   metrics: createMetrics(),
+  debug: { enabled: false, modified: false },
   time: 0,
   tick: 0,
   accumulator: 0,
@@ -285,6 +287,7 @@ export class ColonyEngine {
     if (!c || typeof c.type !== "string")
       return this.notify("Invalid command.");
     const s = this.state;
+    if (c.type === "debug") return this._debug(c);
     if (c.type === "pause") {
       if (c.value !== undefined && typeof c.value !== "boolean")
         return this.notify("Pause needs an on or off value.");
@@ -312,6 +315,7 @@ export class ColonyEngine {
           ? c.seed
           : Math.floor(this.random() * 4294967295);
       const next = new ColonyEngine({ seed, meta });
+      next.state.debug = { ...s.debug };
       this.state = next.state;
       this._routes.clear();
       this.state.started = true;
@@ -642,3 +646,4 @@ Object.assign(ColonyEngine.prototype, defensesSystem);
 
 Object.assign(ColonyEngine.prototype, prestigeSystem);
 Object.assign(ColonyEngine.prototype, metricsSystem);
+Object.assign(ColonyEngine.prototype, debugSystem);

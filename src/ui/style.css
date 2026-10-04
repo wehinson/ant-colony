@@ -1954,3 +1954,59 @@ dialog::backdrop {
   min-width: 22px;
   font-variant-numeric: tabular-nums;
 }
+.debug-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0;
+}
+.debug-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid #dcd6c7;
+  border-radius: 8px;
+  padding: 10px;
+}
+.debug-metrics span {
+  font-size: 11px;
+  color: #6b715d;
+}
+.debug-metrics strong {
+  font-size: 18px;
+}
+.debug-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.debug-actions button {
+  font-size: 11px;
+  padding: 10px;
+}
+.debug-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.debug-form select {
+  flex: 1;
+  min-width: 100px;
+  padding: 9px;
+  border: 1px solid #c5c7b6;
+  border-radius: 8px;
+  background: #faf8f1;
+}
+.practice-note {
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid #b8a768;
+  border-radius: 8px;
+  background: #efe5bc;
+  font-size: 11px;
+  text-align: center;
+}

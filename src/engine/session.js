@@ -36,6 +36,8 @@ export class GameSession {
     }
   }
   command(command) {
+    if (command.type === "sandbox")
+      return command.value ? this.enterSandbox() : this.leaveSandbox();
     const result = this.engine.command(command);
     if (result.ok && ["prestige", "newRun", "pause"].includes(command.type))
       this.save();
@@ -116,8 +118,43 @@ export class GameSession {
   export() {
     return this.engine.serialize();
   }
+  enterSandbox() {
+    if (this.engine.state.debug.enabled)
+      return { ok: false, message: "You are already in a practice copy." };
+    this.save();
+    this.sandboxOriginal = this.export();
+    this.engine = ColonyEngine.deserialize(this.sandboxOriginal);
+    this.engine.state.debug.enabled = true;
+    this.engine.state.paused = true;
+    return {
+      ok: true,
+      message:
+        "Practice copy opened. Debug changes cannot affect your real colony.",
+    };
+  }
+  leaveSandbox() {
+    if (!this.sandboxOriginal)
+      return {
+        ok: false,
+        message:
+          "No original colony is available in this session. Import a real colony save to leave practice.",
+      };
+    this.engine = ColonyEngine.deserialize(this.sandboxOriginal);
+    this.sandboxOriginal = null;
+    this.lastSaveAttempt = this.engine.state.time;
+    return {
+      ok: true,
+      message: "Your real colony is restored exactly as you left it.",
+    };
+  }
+  diagnostics() {
+    return JSON.stringify(this.engine.diagnostics(), null, 2);
+  }
   import(text) {
     const replacement = ColonyEngine.deserialize(text);
+    if (replacement.state.debug.enabled && !this.engine.state.debug.enabled)
+      this.sandboxOriginal = this.export();
+    if (!replacement.state.debug.enabled) this.sandboxOriginal = null;
     this.engine = replacement;
     this.engine.state.paused = true;
     this.panelWasPaused = true;
@@ -134,6 +171,17 @@ export class GameSession {
     this.lastSaveAttempt = this.engine.state.time;
     if (!this.storage) return false;
     if (this.corruptSave) return false;
+    if (this.engine.state.debug.enabled) {
+      try {
+        this.storage.setItem("ant-colony-sandbox", this.export());
+        this.saveStatus =
+          "Practice copy saved separately. Real colony is safe.";
+        return true;
+      } catch {
+        this.saveStatus = "Practice autosave unavailable. Export if needed.";
+        return false;
+      }
+    }
     try {
       const payload = this.export();
       if (this.lastGoodSave && this.lastGoodSave !== payload) {

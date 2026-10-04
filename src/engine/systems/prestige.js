@@ -43,7 +43,7 @@ export const prestigeSystem = {
     s.queen.hp = 0;
     s.status = "defeat";
     s.paused = true;
-    const earned = this.prestigeAward();
+    const earned = s.debug.enabled ? 0 : this.prestigeAward();
     s.result = {
       highestRaid: s.raid.highest,
       peak: s.peak,
@@ -51,7 +51,7 @@ export const prestigeSystem = {
       cause: s.queen.lastHitBy || "An enemy breached the queen’s defenses",
       earned,
     };
-    if (!s.meta.awarded.includes(s.id)) {
+    if (!s.debug.enabled && !s.meta.awarded.includes(s.id)) {
       s.meta.currency += earned;
       s.meta.runs++;
       s.meta.awarded.push(s.id);
