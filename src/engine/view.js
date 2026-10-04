@@ -287,11 +287,9 @@ export function getView(engine, selectedId = null) {
   return {
     time: formatTime(s.time),
     lineage: lineageView(s),
+    debug: engine.debugView(),
     rawTime: s.time,
-    generation: String(s.meta.runs + (s.status === "defeat" ? 0 : 1)).padStart(
-      2,
-      "0",
-    ),
+    generation: String(s.lineage.generation + 1).padStart(2, "0"),
     status,
     gameStatus: s.status,
     paused: s.paused,
