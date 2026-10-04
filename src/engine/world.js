@@ -41,6 +41,15 @@ export function neighbors(p) {
     { x: p.x, y: p.y + 1 },
   ];
 }
+export function pathDistance(from, path) {
+  let total = 0,
+    previous = from;
+  for (const p of path) {
+    total += Math.abs(p.x - previous.x) + Math.abs(p.y - previous.y);
+    previous = p;
+  }
+  return total;
+}
 export function entrances(world) {
   return Object.keys(world.dug)
     .filter((k) => k.endsWith(",1"))
