@@ -9,18 +9,29 @@ export class GameSession {
     this.engine = new ColonyEngine({ seed });
     this.saveStatus = "Local autosave";
     this.lastSaved = 0;
+    this.lastSaveAttempt = 0;
     this.suspended = false;
     if (storage) {
       try {
         const text = storage.getItem("ant-colony-save");
         if (text) {
           this.engine = ColonyEngine.deserialize(text);
+          this.lastGoodSave = text;
           this.saveStatus = "Colony restored";
         }
       } catch {
-        this.saveStatus = "Save could not load. Import a backup in Settings.";
-        this.engine.state.paused = true;
-        this.corruptSave = true;
+        try {
+          const backup = storage.getItem("ant-colony-save-backup");
+          this.engine = ColonyEngine.deserialize(backup);
+          this.engine.state.paused = true;
+          this.lastGoodSave = backup;
+          this.saveStatus =
+            "Recovered the previous autosave. The latest save was damaged.";
+        } catch {
+          this.saveStatus = "Save could not load. Import a backup in Settings.";
+          this.engine.state.paused = true;
+          this.corruptSave = true;
+        }
       }
     }
   }
@@ -34,9 +45,9 @@ export class GameSession {
     if (this.suspended) return;
     this.engine.advance(seconds);
     if (
-      this.engine.state.time - this.lastSaved >= 10 ||
+      this.engine.state.time - this.lastSaveAttempt >= 10 ||
       (this.engine.state.status === "defeat" &&
-        this.lastSaved !== this.engine.state.time)
+        this.lastSaveAttempt !== this.engine.state.time)
     )
       this.save();
   }
@@ -120,10 +131,20 @@ export class GameSession {
     };
   }
   save() {
+    this.lastSaveAttempt = this.engine.state.time;
     if (!this.storage) return false;
     if (this.corruptSave) return false;
     try {
-      this.storage.setItem("ant-colony-save", this.export());
+      const payload = this.export();
+      if (this.lastGoodSave && this.lastGoodSave !== payload) {
+        try {
+          this.storage.setItem("ant-colony-save-backup", this.lastGoodSave);
+        } catch {
+          /* A backup must not block the current save when storage is nearly full. */
+        }
+      }
+      this.storage.setItem("ant-colony-save", payload);
+      this.lastGoodSave = payload;
       this.lastSaved = this.engine.state.time;
       this.saveStatus = "Saved on this device";
       return true;

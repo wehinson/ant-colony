@@ -1,4 +1,4 @@
-export const VERSION = 1;
+export const VERSION = 2;
 export const STEP = 0.1;
 export const ECONOMIC = [
   "queen",

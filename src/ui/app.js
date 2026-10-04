@@ -432,8 +432,6 @@ $("import-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
   try {
-    if (file.size > 30_000_000)
-      throw new Error("Save files must be smaller than 30 MB.");
     const result = session.import(await file.text());
     notify(result.message);
     ui.selected = null;
