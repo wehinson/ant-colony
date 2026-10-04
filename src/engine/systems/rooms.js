@@ -291,6 +291,7 @@ export const roomsSystem = {
       if (
         b.complete &&
         b.upgrading &&
+        s.time - b.lastDamage >= 6 &&
         b.staff.length >= (b.upgradeStaffRequired || 0) &&
         b.staff.every((id) => {
           const a = s.ants.find((a) => a.id === id);

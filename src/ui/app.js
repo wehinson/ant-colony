@@ -217,7 +217,7 @@ function renderUI() {
   html(
     "selection",
     b
-      ? `<div class="selection-heading"><h3>${icon(b.icon, 16)} &nbsp; ${escape(b.name)}</h3><button class="icon-button" data-action="deselect" aria-label="Close structure details">${icon("close", 14)}</button></div><p class="selection-detail">${escape(b.description)}</p><div class="selection-stats">${escape(b.condition)}${b.complete ? ` · Level ${b.level}` : ""}${b.staff.length ? `<br>${b.staff.length} committed warriors` : ""}</div><div class="mini-progress"><span style="width:${b.complete ? (b.hp / b.maxHp) * 100 : b.progress * 100}%"></span></div>${b.complete ? `<button class="secondary-button" data-action="upgrade" data-value="${b.id}" ${b.upgradeWaiting ? "disabled" : ""}>${icon("bolt", 13)} ${escape(b.upgradeLabel)}</button><button class="text-button" style="margin-top:9px" data-action="repair" data-value="${b.id}">${b.repair ? "✓ Auto repair enabled" : "Enable dig crew repairs"}</button>${b.type === "queen" ? `<button class="secondary-button" data-action="relocate" ${!b.canRelocate ? "disabled" : ""}>${icon("flag", 13)} Relocate queen</button>` : ""}` : `<button class="secondary-button" data-action="cancel" data-value="${b.id}">Cancel blueprint · refund resources</button>`}`
+      ? `<div class="selection-heading"><h3>${icon(b.icon, 16)} &nbsp; ${escape(b.name)}</h3><button class="icon-button" data-action="deselect" aria-label="Close structure details">${icon("close", 14)}</button></div><p class="selection-detail">${escape(b.description)}</p><div class="selection-stats">${escape(b.condition)}${b.complete ? ` · Level ${b.level}` : ""}${b.staff.length ? `<br>${b.staff.length} committed warriors` : ""}</div><div class="mini-progress"><span style="width:${b.complete ? (b.hp / b.maxHp) * 100 : b.progress * 100}%"></span></div>${b.complete ? `<button class="secondary-button" data-action="upgrade" data-value="${b.id}" ${b.upgradeWaiting ? "disabled" : ""}>${icon("bolt", 13)} ${escape(b.upgradeLabel)}</button><button class="text-button" style="margin-top:9px" data-action="repair" data-value="${b.id}">${b.repair ? "✓ Auto repair enabled" : "Enable dig crew repairs"}</button>${b.type === "queen" ? `<button class="secondary-button" data-action="relocate" ${!b.canRelocate ? "disabled" : ""}>${icon("flag", 13)} Relocate queen</button>` : ""}` : `${b.missingStaff ? `<button class="secondary-button" data-action="restaff" data-value="${b.id}">Replace ${b.missingStaff} lost staff</button>` : ""}<button class="secondary-button" data-action="cancel" data-value="${b.id}">Cancel blueprint · refund resources</button>`}`
       : "",
   );
   html(
@@ -320,6 +320,9 @@ document.addEventListener("click", (event) => {
       break;
     case "upgrade":
       command({ type: "upgrade", id: value });
+      break;
+    case "restaff":
+      command({ type: "restaff", id: value });
       break;
     case "repair":
       command({ type: "repair", id: value });
