@@ -2,10 +2,10 @@
 
 - Branch: `working`
 - Agent: Codex
-- Status: Ready With Caveat
+- Status: Active — first-principles system audit
 - Version: 0.1.0 (first complete game; not shipped)
 - Updated: 2026-10-03
-- Scope: headless simulation, expanding terrain, economy, construction, combat, raids, prestige, saves, and playable interface.
+- Scope: independent local system branches, ranked ant lineages, debug tools, balance instrumentation, and a second audit with automated gameplay simulations.
 - Verification: 46 tests pass; syntax checks and production build pass.
 - Backup: local Git commits only, as William requested. No remote or deployment was created.
 

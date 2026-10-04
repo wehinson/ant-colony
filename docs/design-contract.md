@@ -1,0 +1,25 @@
+# Ant Colony acceptance contract
+
+This contract records William's game brief and his October 3 follow-up. The follow-up adds ranked ant lineages, local system branches, debug controls, and a second audit with automated play. It overrides the earlier exclusion of additional ant species. No remote backup or deployment is authorized for this task.
+
+| System | Required behavior |
+| --- | --- |
+| Excavation | Incremental, unbounded underground terrain; camera-independent simulation; right-click toggle and drag; oldest reachable unclaimed job; parallel diggers; physical access; shared energy; no refill. |
+| Rooms | Multi-tile preview, reserved costs, auto-queued footprint, no secret tunnel, automatic connected completion, refund cancellation, six ordered unlocks; unlocks survive destruction. |
+| Founding and queen | Free first chamber and egg, queen digs first nest, first worker gathers food, one physical queen, physical peaceful relocation that preserves brood and upgrades, actual queen death ends play. |
+| Assignment | Food, dig, mobile warrior crews; safe trip completion; no teleports or double work; configurable new-worker crew; idle diggers remain diggers. |
+| Foraging | Physical outbound, forage, return and unload phases; one delivery credit; modest cooperation; capacity holds cargo; no duplicate passive income. |
+| Economy | Brood slots limit concurrent eggs only; automatic waste penalty has a floor; surface-connected prey capture; quarters improve shared energy; no housing cap; paid repairs and supplemental salvage. |
+| Combat | Individual position, health, range, cooldown and damage; dirt blocks movement and sight; finite attack space; civilians shelter and fight weakly if trapped; hive controller divides groups and keeps a queen reserve. |
+| Military | Barracks provide mobile capacity, never ants; guard costs 2 staff, ranged costs 15; staff leave mobile pool and remain living population; staff die with their post; barracks loss permits existing over-cap warriors. |
+| Defenses | Guard, ranged, surface anti-air, spray, snare, resetting damage trap, destructible barricade; individual upgrades; active attack blocks repair; terrain remains after destruction. |
+| Enemies | Distinct early scouts, durable units and swarms; advanced flyers and tunnellers follow explicit movement rules and arrive only after counters unlock. The full animal design pool is optional. |
+| Raids | Seeded time-based budget; plan fixed at warning; first arrival 3–4 minutes, warning 45–60 seconds, wave break 15–25 seconds, raid break 6–10 minutes; 2 to 6 waves; no camera spawn or army-based scaling; no scripted death. |
+| Prestige | Completed raids plus peak simultaneous living ants including staff; one award per defeat; five permanent upgrade branches; run state resets and permanent records persist. |
+| Lineage | Use the user's ranked list of 50 ants. Begin at rank 50 and advance one entry for every completed colony restart. After rank 1, begin a stronger cycle. No finite survival or progression ceiling. Game variants retain one queen and worker crews. |
+| Save | Pause all simulation and difficulty; paused orders wait for steps; no offline progress; local autosave, export/import, full random and raid state; no repeated award or reload reroll. |
+| UI | Scrollable map, economic/military branches, footprints/costs/statuses, crew controls, distinct food/energy/population/mobile/staff/queen/raid HUD, attacks/health, focus queen or threat. |
+| Engine | All rules, validation, workflow and timing run without graphics. UI renders interpolated state and submits orders. Off-screen rendering does not change simulation. |
+| Verification | Founding through destruction, defeat, purchase and next colony; deterministic replays; generated valid and invalid orders; several play policies and seeds; performance and balance reports; browser checks for behavior engine tests cannot prove. |
+
+Balance targets are starting points. An unprestiged idle or economy-only colony should usually fall near 15 minutes. Good defense must extend survival, and permanent progress must not be canceled by adaptive enemy scaling.
