@@ -62,6 +62,11 @@ html(
 
 function notify(message, error = false) {
   if (!message) return;
+  if ($("dialog").open) {
+    $("dialog-feedback").hidden = false;
+    $("dialog-feedback").textContent = message;
+    $("dialog-feedback").classList.toggle("error", error);
+  }
   $("toast").textContent = message;
   $("toast").classList.add("show");
   $("toast").style.background = error ? "#8f6047" : "#424b36";
@@ -269,13 +274,14 @@ function dialogContent(type) {
   if (type === "journal")
     return `<div class="dialog-inner">${header("THE STORY SO FAR", "Colony journal")}${view.events.map((e) => journalEntry(e, true)).join("")}</div>`;
   if (type === "research")
-    return `<div class="dialog-inner">${header("A LITTLE BETTER, EVERY DAY", "Colony improvements")}<p class="dialog-copy">These improvements help your current colony. They reset when a new colony begins.</p>${view.research.map((r) => `<div class="upgrade-row"><span class="upgrade-icon">${icon(r.key === "carry" ? "leaf" : r.key === "speed" ? "flag" : "shield", 23)}</span><div class="upgrade-info"><h3>${r.name}</h3><p>${r.description}</p><small>Level ${r.level}</small></div><button class="secondary-button" data-action="buyResearch" data-value="${r.key}" ${r.disabled ? "disabled" : ""}>${r.cost} food</button></div>`).join("")}</div>`;
+    return `<div class="dialog-inner">${header("A LITTLE BETTER, EVERY DAY", "Colony improvements")}<p class="dialog-copy">These improvements help your current colony. They reset when a new colony begins.</p>${view.research.map((r) => `<div class="upgrade-row"><span class="upgrade-icon">${icon(r.key === "carry" ? "leaf" : r.key === "speed" ? "flag" : "shield", 23)}</span><div class="upgrade-info"><h3>${r.name}</h3><p>${r.description}</p><small>Level ${r.level}</small></div><button class="secondary-button" data-action="buyResearch" data-value="${r.key}" aria-label="Improve ${escape(r.name)} for ${r.cost} food" ${r.disabled ? "disabled" : ""}>${r.cost} food</button></div>`).join("")}</div>`;
   if (type === "defeat")
-    return `<div class="dialog-inner">${header("AN ENDING. A NEW BEGINNING.", "The colony lives on in you.", false)}<p class="dialog-copy">Your queen held her ground. The colony is gone, but what you built becomes the seed of something stronger.</p><div class="result-stats"><div><strong>${view.result.highestRaid}</strong><span>RAIDS SURVIVED</span></div><div><strong>${view.result.peak}</strong><span>PEAK POPULATION</span></div><div><strong>${view.result.duration}</strong><span>TIME TOGETHER</span></div></div><p class="fatal-cause">Fatal breach: ${escape(view.result.cause)} · +${view.result.earned} legacy seeds</p>${view.debug.active ? `<p class="practice-note">Practice ended. No prestige or ant unlock was awarded.</p><button class="primary-button full" data-action="practice-exit">Return to real colony</button>` : lineageCard(true)}<div class="legacy-balance"><span>Permanent improvements</span><strong>${icon("seed", 17)} ${view.legacy.currency} seeds</strong></div>${view.legacy.upgrades.map((u) => `<div class="upgrade-row"><span class="upgrade-icon">${icon(u.icon, 22)}</span><div class="upgrade-info"><h3>${u.name}</h3><p>${u.description}</p><small>Level ${u.level}</small></div><button class="secondary-button" data-action="prestige" data-value="${u.key}" ${u.disabled ? "disabled" : ""}>${u.cost} ${icon("seed", 13)}</button></div>`).join("")}<button class="primary-button full" data-action="newRun" style="margin-top:24px">Begin the next colony ${icon("arrow", 17)}</button><p class="welcome-note">Best: raid ${view.legacy.bestRaid} · ${view.legacy.bestPopulation} ants · ${view.legacy.bestTime}</p><button class="text-button" data-action="export" style="display:block;margin:12px auto 0">Export this legacy</button></div>`;
+    return `<div class="dialog-inner">${header("AN ENDING. A NEW BEGINNING.", "The colony lives on in you.", false)}<p class="dialog-copy">Your queen held her ground. The colony is gone, but what you built becomes the seed of something stronger.</p><div class="result-stats"><div><strong>${view.result.highestRaid}</strong><span>RAIDS SURVIVED</span></div><div><strong>${view.result.peak}</strong><span>PEAK POPULATION</span></div><div><strong>${view.result.duration}</strong><span>TIME TOGETHER</span></div></div><p class="fatal-cause">Fatal breach: ${escape(view.result.cause)} · +${view.result.earned} legacy seeds</p>${view.debug.active ? `<p class="practice-note">Practice ended. No prestige or ant unlock was awarded.</p><button class="primary-button full" data-action="practice-exit">Return to real colony</button>` : lineageCard(true)}<div class="legacy-balance"><span>Permanent improvements</span><strong>${icon("seed", 17)} ${view.legacy.currency} seeds</strong></div>${view.legacy.upgrades.map((u) => `<div class="upgrade-row"><span class="upgrade-icon">${icon(u.icon, 22)}</span><div class="upgrade-info"><h3>${u.name}</h3><p>${u.description}</p><small>Level ${u.level}</small></div><button class="secondary-button" data-action="prestige" data-value="${u.key}" aria-label="Improve ${escape(u.name)} for ${u.cost} legacy seeds" ${u.disabled ? "disabled" : ""}>${u.cost} ${icon("seed", 13)}</button></div>`).join("")}<button class="primary-button full" data-action="newRun" style="margin-top:24px">Begin the next colony ${icon("arrow", 17)}</button><p class="welcome-note">Best: raid ${view.legacy.bestRaid} · ${view.legacy.bestPopulation} ants · ${view.legacy.bestTime}</p><button class="text-button" data-action="export" style="display:block;margin:12px auto 0">Export this legacy</button></div>`;
   return "";
 }
 function openDialog(type) {
   ui.dialog = type;
+  $("dialog-feedback").hidden = true;
   if (type !== "welcome" && type !== "defeat") session.openPanel();
   html("dialog-content", dialogContent(type));
   if (!$("dialog").open) $("dialog").showModal();
@@ -541,11 +547,13 @@ canvas.addEventListener("pointerdown", (event) => {
     pan: event.button === 1 || (event.button === 0 && ui.tool === "inspect"),
     moved: false,
     lastTile: null,
+    lastCell: null,
   };
   if (event.button === 2) {
     mapAction(p, true);
     const tile = renderer.tileAt(p.x, p.y);
     ui.pointer.lastTile = `${tile.x},${tile.y}`;
+    ui.pointer.lastCell = tile;
   }
 });
 canvas.addEventListener("pointermove", (event) => {
@@ -564,8 +572,14 @@ canvas.addEventListener("pointermove", (event) => {
       drag.moved &&
       drag.lastTile !== `${tile.x},${tile.y}`
     ) {
-      mapAction(p, drag.right, true);
+      command({
+        type: "digStroke",
+        from: drag.lastCell || renderer.tileAt(drag.start.x, drag.start.y),
+        to: tile,
+        includeStart: !drag.lastCell,
+      });
       drag.lastTile = `${tile.x},${tile.y}`;
+      drag.lastCell = tile;
     }
     drag.last = p;
   }
@@ -632,7 +646,7 @@ function updateTooltip(p) {
 document.addEventListener("keydown", (event) => {
   if (
     ui.dialog ||
-    event.target.matches("input,select,textarea") ||
+    event.target.matches("input,select,textarea,button,a,[contenteditable]") ||
     event.ctrlKey ||
     event.metaKey ||
     event.altKey

@@ -63,7 +63,7 @@ export const debugSystem = {
         if (!Object.hasOwn(ENEMIES, c.enemy))
           return this.notify("Choose a valid enemy.");
         const openings = entrances(s.world);
-        const x = Math.min(0, ...openings.map((p) => p.x)) - 16;
+        const x = openings.reduce((edge, p) => Math.min(edge, p.x), 0) - 16;
         this.spawnEnemy(c.enemy, { x, y: 0 });
         break;
       }

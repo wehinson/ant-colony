@@ -223,7 +223,7 @@ export function getView(engine, selectedId = null) {
   if (s.status === "active" && !s.buildings.some((b) => b.type === "queen"))
     alerts.push({
       icon: "crown",
-      text: `Queen’s Chamber lost. Rebuild at (${s.queen.home.x}, ${s.queen.home.y}) to resume brood production.`,
+      text: `Queen’s Chamber lost. Rebuild at (${s.queen.home.x}, ${s.queen.home.y}) to restore its brood slots.`,
       kind: "danger",
     });
   if (waitingCargo || s.food >= st.foodCap - 0.01)
@@ -300,7 +300,7 @@ export function getView(engine, selectedId = null) {
     foodPercent: (s.food / st.foodCap) * 100,
     income: `${st.income.toFixed(1)}/min`,
     energy: Math.floor(s.energy),
-    energyCap: st.energyCap,
+    energyCap: Math.floor(st.energyCap),
     energyPercent: (s.energy / st.energyCap) * 100,
     recovery: `+${st.recovery.toFixed(2)}/s`,
     population: st.population,

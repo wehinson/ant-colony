@@ -1,36 +1,4 @@
-import { SpatialIndex } from "../spatial.js";
-import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  validTile,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
-  terrainValue,
-  ensureTerrain,
-  excavate,
-  isOpen,
-  neighbors,
-  entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
-  lineOfSight,
-} from "../world.js";
-
+import { PERMANENT } from "../catalog.js";
 // Engine subsystem; methods share the colony state and headless services.
 export const prestigeSystem = {
   prestigeAward() {

@@ -1,35 +1,12 @@
 import { lineageBoost } from "../lineages.js";
 import {
-  VERSION,
-  STEP,
-  BUILDINGS,
-  ECONOMIC,
-  CREWS,
-  ENEMIES,
-  PERMANENT,
-  RESEARCH,
-  key,
-  cell,
-  center,
-  distance,
-  clamp,
-  footprint,
-  formatTime,
-} from "../catalog.js";
-import {
   terrainValue,
   ensureTerrain,
   excavate,
   isOpen,
   neighbors,
-  entrances,
-  buildingAt,
-  blockedAt,
-  pathfind,
-  connected,
-  lineOfSight,
+  pathDistance,
 } from "../world.js";
-
 // Engine subsystem; methods share the colony state and headless services.
 export const excavationSystem = {
   _designate(x, y, blueprint = null) {
@@ -64,7 +41,10 @@ export const excavationSystem = {
           .filter((p) => isOpen(s.world, p.x, p.y))
           .map((p) => ({ p, path: this.route(a, p) }))
           .filter((o) => o.path !== null)
-          .sort((a, b) => a.path.length - b.path.length);
+          .sort(
+            (left, right) =>
+              pathDistance(a, left.path) - pathDistance(a, right.path),
+          );
         if (!spots.length) continue;
         job = j;
         job.owner = a.id;

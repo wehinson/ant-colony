@@ -54,7 +54,7 @@ export const metricsSystem = {
       seed: s.seed,
       time: s.time,
       status: s.status,
-      lineage: s.lineage,
+      lineage: { ...s.lineage },
       highestRaid: s.raid.highest,
       peak: s.peak,
       living: st.population,

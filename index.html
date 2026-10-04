@@ -277,7 +277,16 @@
       </footer>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <dialog id="dialog"><div id="dialog-content"></div></dialog>
+    <dialog id="dialog">
+      <p
+        id="dialog-feedback"
+        class="dialog-feedback"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></p>
+      <div id="dialog-content"></div>
+    </dialog>
     <input
       type="file"
       id="import-file"

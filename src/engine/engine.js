@@ -15,34 +15,21 @@ import {
   VERSION,
   STEP,
   BUILDINGS,
-  ECONOMIC,
   CREWS,
-  ENEMIES,
-  PERMANENT,
   RESEARCH,
   key,
   validTile,
   cell,
-  center,
   distance,
   clamp,
-  footprint,
-  formatTime,
 } from "./catalog.js";
 import {
-  terrainValue,
   ensureTerrain,
-  excavate,
   isOpen,
-  neighbors,
-  entrances,
-  buildingAt,
   blockedAt,
   pathfind,
   connected,
-  lineOfSight,
 } from "./world.js";
-
 const freshMeta = () => ({
   currency: 0,
   upgrades: { foraging: 0, brood: 0, excavation: 0, military: 0, founding: 0 },
@@ -331,6 +318,32 @@ export class ColonyEngine {
     )
       return this.notify("This control needs an on or off value.");
     switch (c.type) {
+      case "digStroke": {
+        if (
+          !c.from ||
+          !c.to ||
+          !validTile(c.from.x, c.from.y) ||
+          !validTile(c.to.x, c.to.y) ||
+          c.from.y < 1 ||
+          c.to.y < 1
+        )
+          return this.notify("Drag across underground tiles.");
+        const dx = c.to.x - c.from.x,
+          dy = c.to.y - c.from.y,
+          steps = Math.max(Math.abs(dx), Math.abs(dy));
+        if (steps > 4096) return this.notify("Use a shorter dig stroke.");
+        let previous = c.from;
+        for (let i = c.includeStart ? 0 : 1; i <= steps; i++) {
+          const x = steps ? Math.round(c.from.x + (dx * i) / steps) : c.from.x,
+            y = steps ? Math.round(c.from.y + (dy * i) / steps) : c.from.y;
+          // A diagonal stroke must form a passage through shared tile edges.
+          if (x !== previous.x && y !== previous.y)
+            this._designate(x, previous.y);
+          this._designate(x, y);
+          previous = { x, y };
+        }
+        return this.ok();
+      }
       case "dig": {
         const { x, y } = c;
         if (!validTile(x, y) || y < 1)
@@ -470,7 +483,10 @@ export class ColonyEngine {
     const unsafe = a.path?.some(
       (p) =>
         (options.avoidBarriers && blockedAt(this.state, p.x, p.y)) ||
-        (options.danger && this.near("enemies", p, 1.5).some((e) => e.hp > 0)),
+        (options.danger &&
+          this.near("enemies", p, 1.5).some(
+            (e) => e.hp > 0 && distance(e, p) < 1.5,
+          )),
     );
     if (
       unsafe ||
@@ -478,11 +494,12 @@ export class ColonyEngine {
       a.routeRevision !== this.state.world.revision ||
       !a.path?.length
     ) {
-      a.path = this.route(a, targetCell, options) || [];
+      const route = this.route(a, targetCell, options);
+      a.path = route || [];
       a.routeTarget = signature;
       a.routeRevision = this.state.world.revision;
-      if (a.path.length && distance(a, cell(a)) > 0.05) a.path.unshift(cell(a));
-      if (!a.path.length && distance(a, targetCell) > 0.8) return false;
+      if (route === null) return false;
+      if (distance(a, cell(a)) > 0.05) a.path.unshift(cell(a));
     }
     let remaining = speed * dt;
     while (remaining > 0 && a.path.length) {

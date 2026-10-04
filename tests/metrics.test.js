@@ -22,6 +22,7 @@ test("diagnostic snapshots are read-only and counters freeze when paused", () =>
     report = e.diagnostics();
   report.counters.foodDelivered = 9999;
   report.samples.length = 0;
+  report.lineage.generation = 9999;
   e.advance(100, { exact: true });
   assert.equal(e.serialize(), before);
   assert.doesNotThrow(() => ColonyEngine.deserialize(before));

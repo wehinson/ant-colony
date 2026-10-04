@@ -24,7 +24,7 @@ export function policy(game, name, random) {
     for (const [building, x, y] of [
       ["outpost", -2, 0],
       ["spray", 1, 2],
-      ["snare", 0, 7],
+      ["snare", 2, 2],
       ["ranged", -4, 2],
     ])
       if (
