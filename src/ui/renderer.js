@@ -643,11 +643,9 @@ export class MapRenderer {
     c.rotate(angle);
     c.scale(z, z);
     ellipse(c, 0, 3, 10, 3.5, "#3f2b2525");
-    const color = queen
-        ? "#754927"
-        : a.crew === "warrior"
-          ? "#664333"
-          : "#624c34",
+    const color =
+        a.color ||
+        (queen ? "#754927" : a.crew === "warrior" ? "#664333" : "#624c34"),
       moving =
         Math.abs(a.x - a.previousX) + Math.abs(a.y - a.previousY) > 0.001;
     c.strokeStyle = color;

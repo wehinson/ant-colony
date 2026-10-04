@@ -1,3 +1,4 @@
+import { lineageBoost } from "../lineages.js";
 import {
   VERSION,
   STEP,
@@ -149,7 +150,9 @@ export const roomsSystem = {
     }
     const maxHp =
       d.hp *
-      (d.branch === "military" ? 1 + s.meta.upgrades.military * 0.15 : 1);
+      (d.branch === "military"
+        ? (1 + s.meta.upgrades.military * 0.15) * lineageBoost(s, "military")
+        : 1);
     const b = {
       id,
       type,

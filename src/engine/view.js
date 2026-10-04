@@ -10,6 +10,7 @@ import {
   key,
 } from "./catalog.js";
 import { isOpen, buildingAt } from "./world.js";
+import { lineageView } from "./lineages.js";
 
 // All player-facing calculations and availability decisions live in the engine.
 // Rendering code receives values and labels; it never resolves a game rule.
@@ -285,6 +286,7 @@ export function getView(engine, selectedId = null) {
   }));
   return {
     time: formatTime(s.time),
+    lineage: lineageView(s),
     rawTime: s.time,
     generation: String(s.meta.runs + (s.status === "defeat" ? 0 : 1)).padStart(
       2,

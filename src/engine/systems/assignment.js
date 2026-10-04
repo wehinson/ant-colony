@@ -1,3 +1,4 @@
+import { lineageFor, lineageBoost } from "../lineages.js";
 import {
   VERSION,
   STEP,
@@ -94,12 +95,14 @@ export const assignmentSystem = {
     a.maxHp = hp;
   },
   antMaxHp(crew) {
-    return crew === "warrior"
-      ? 65 *
+    return (
+      (crew === "warrior"
+        ? 65 *
           (1 +
             this.state.meta.upgrades.military * 0.15 +
             this.state.research.armor * 0.15)
-      : 28;
+        : 28) * lineageBoost(this.state, "military")
+    );
   },
   _hatch(egg) {
     const s = this.state,
@@ -119,6 +122,7 @@ export const assignmentSystem = {
     const maxHp = this.antMaxHp(crew);
     s.ants.push({
       id: this.id("ant"),
+      color: lineageFor(s.lineage.generation).color,
       x: p.x,
       y: p.y,
       previousX: p.x,
@@ -149,7 +153,9 @@ export const assignmentSystem = {
   workerSpeed() {
     const s = this.state;
     return (
-      1.5 * (1 + s.research.speed * 0.12 + s.meta.upgrades.foraging * 0.05)
+      1.5 *
+      (1 + s.research.speed * 0.12 + s.meta.upgrades.foraging * 0.05) *
+      lineageBoost(s, "foraging")
     );
   },
   sheltered() {

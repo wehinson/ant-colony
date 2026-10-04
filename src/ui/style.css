@@ -1856,3 +1856,101 @@ dialog::backdrop {
     scroll-behavior: auto !important;
   }
 }
+/* Colony lineage and the ranked ant collection. */
+.lineage-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 28px);
+  margin: 8px 14px 16px;
+  padding: 12px;
+  border: 1px solid #d8d0bd;
+  border-radius: 12px;
+  background: #efeadc;
+  color: #535c3d;
+  text-align: left;
+  cursor: pointer;
+}
+.lineage-button span {
+  min-width: 0;
+  flex: 1;
+}
+.lineage-button strong,
+.lineage-button small {
+  display: block;
+}
+.lineage-button small {
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+.lineage-button strong {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.lineage-card {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  background: #eee8d9;
+  border: 1px solid #dbd1ba;
+  border-radius: 14px;
+  padding: 18px;
+  margin: 20px 0;
+  text-align: left;
+}
+.lineage-art {
+  color: var(--ant-color);
+  flex: none;
+}
+.lineage-card h3 {
+  margin: 7px 0;
+  font-size: 19px;
+}
+.lineage-card p {
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6c6f5d;
+}
+.lineage-card small {
+  font-size: 10px;
+  color: #79745d;
+}
+.lineage-collection {
+  display: grid;
+  gap: 7px;
+}
+.lineage-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #e0dacb;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.lineage-entry div {
+  flex: 1;
+  min-width: 0;
+}
+.lineage-entry small {
+  display: block;
+  margin-top: 5px;
+  color: #777964;
+  font-size: 10px;
+}
+.lineage-entry.current {
+  background: #e6ebda;
+  border-color: #97a475;
+}
+.lineage-entry.locked {
+  opacity: 0.65;
+}
+.lineage-entry > span:last-child {
+  font-size: 9px;
+}
+.lineage-rank {
+  min-width: 22px;
+  font-variant-numeric: tabular-nums;
+}
