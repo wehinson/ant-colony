@@ -1,0 +1,756 @@
+{
+  "verifiedOn": "2026-10-04",
+  "engineTests": 78,
+  "generatedScenarios": 24,
+  "reloadChecks": 1087,
+  "scenarios": [
+    {
+      "policy": "idle",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 819.4,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 11,
+      "reloadChecks": 23,
+      "nextRunVerified": true,
+      "built": [
+        "queen"
+      ]
+    },
+    {
+      "policy": "idle",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 811.9,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 11,
+      "reloadChecks": 22,
+      "nextRunVerified": true,
+      "built": [
+        "queen"
+      ]
+    },
+    {
+      "policy": "idle",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 815.3,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 11,
+      "reloadChecks": 23,
+      "nextRunVerified": true,
+      "built": [
+        "queen"
+      ]
+    },
+    {
+      "policy": "economy",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 815.1,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 54,
+      "reloadChecks": 23,
+      "nextRunVerified": true,
+      "built": [
+        "queen",
+        "storage",
+        "brood",
+        "waste",
+        "prey",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "economy",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 808,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 56,
+      "reloadChecks": 22,
+      "nextRunVerified": true,
+      "built": [
+        "queen",
+        "storage",
+        "brood",
+        "waste",
+        "prey",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "economy",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 812.6,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 55,
+      "reloadChecks": 22,
+      "nextRunVerified": true,
+      "built": [
+        "queen",
+        "storage",
+        "brood",
+        "waste",
+        "prey",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "balanced",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 145,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "quarters",
+        "guard"
+      ]
+    },
+    {
+      "policy": "balanced",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 141,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "guard",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "balanced",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 142,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "guard",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 137,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "outpost",
+        "quarters",
+        "guard",
+        "spray",
+        "snare",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 143,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "outpost",
+        "guard",
+        "spray",
+        "quarters",
+        "ranged",
+        "snare"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 138,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "outpost",
+        "guard",
+        "quarters",
+        "spray",
+        "ranged",
+        "snare"
+      ]
+    },
+    {
+      "policy": "explorer",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 145,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "quarters",
+        "guard"
+      ]
+    },
+    {
+      "policy": "explorer",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 141,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "guard",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "explorer",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 143,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "prey",
+        "barracks",
+        "guard",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "chaotic",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 87,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard",
+        "prey",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "chaotic",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 835,
+      "status": "defeat",
+      "highestRaid": 1,
+      "peak": 40,
+      "reloadChecks": 23,
+      "nextRunVerified": true,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard"
+      ]
+    },
+    {
+      "policy": "chaotic",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 0,
+      "seconds": 1800,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 135,
+      "reloadChecks": 49,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard",
+        "prey",
+        "quarters"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 23,
+      "permanentLevel": 4,
+      "lineageGeneration": 0,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 4,
+      "peak": 241,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard",
+        "prey",
+        "snare",
+        "quarters",
+        "spray",
+        "outpost",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 23,
+      "permanentLevel": 0,
+      "lineageGeneration": 25,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 284,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "prey",
+        "snare",
+        "guard",
+        "spray",
+        "quarters",
+        "outpost",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 123,
+      "permanentLevel": 4,
+      "lineageGeneration": 0,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 4,
+      "peak": 246,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard",
+        "prey",
+        "snare",
+        "quarters",
+        "spray",
+        "outpost",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 123,
+      "permanentLevel": 0,
+      "lineageGeneration": 25,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 265,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "prey",
+        "snare",
+        "guard",
+        "spray",
+        "quarters",
+        "outpost",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 180231,
+      "permanentLevel": 4,
+      "lineageGeneration": 0,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 4,
+      "peak": 247,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "guard",
+        "prey",
+        "snare",
+        "quarters",
+        "spray",
+        "outpost",
+        "ranged"
+      ]
+    },
+    {
+      "policy": "fortress",
+      "seed": 180231,
+      "permanentLevel": 0,
+      "lineageGeneration": 25,
+      "seconds": 2400,
+      "status": "active",
+      "highestRaid": 3,
+      "peak": 266,
+      "reloadChecks": 65,
+      "nextRunVerified": false,
+      "built": [
+        "queen",
+        "storage",
+        "barricade",
+        "trap",
+        "brood",
+        "waste",
+        "barracks",
+        "prey",
+        "snare",
+        "guard",
+        "spray",
+        "quarters",
+        "outpost",
+        "ranged"
+      ]
+    }
+  ],
+  "balance": [
+    {
+      "seed": 23,
+      "policy": "idle",
+      "seconds": 819.4,
+      "highestRaid": 1,
+      "peak": 11,
+      "status": "defeat"
+    },
+    {
+      "seed": 123,
+      "policy": "idle",
+      "seconds": 811.9,
+      "highestRaid": 1,
+      "peak": 11,
+      "status": "defeat"
+    },
+    {
+      "seed": 180231,
+      "policy": "idle",
+      "seconds": 815.3,
+      "highestRaid": 1,
+      "peak": 11,
+      "status": "defeat"
+    },
+    {
+      "seed": 23,
+      "policy": "economy",
+      "seconds": 815.1,
+      "highestRaid": 1,
+      "peak": 54,
+      "status": "defeat"
+    },
+    {
+      "seed": 123,
+      "policy": "economy",
+      "seconds": 808,
+      "highestRaid": 1,
+      "peak": 56,
+      "status": "defeat"
+    },
+    {
+      "seed": 180231,
+      "policy": "economy",
+      "seconds": 812.6,
+      "highestRaid": 1,
+      "peak": 55,
+      "status": "defeat"
+    },
+    {
+      "seed": 23,
+      "policy": "defended",
+      "seconds": 2091.8,
+      "highestRaid": 3,
+      "peak": 145,
+      "status": "defeat"
+    },
+    {
+      "seed": 123,
+      "policy": "defended",
+      "seconds": 2239.2,
+      "highestRaid": 3,
+      "peak": 141,
+      "status": "defeat"
+    },
+    {
+      "seed": 180231,
+      "policy": "defended",
+      "seconds": 2238.7,
+      "highestRaid": 3,
+      "peak": 142,
+      "status": "defeat"
+    },
+    {
+      "seed": 23,
+      "policy": "legacy 4",
+      "seconds": 2400,
+      "highestRaid": 4,
+      "peak": 233,
+      "status": "active"
+    },
+    {
+      "seed": 123,
+      "policy": "legacy 4",
+      "seconds": 2400,
+      "highestRaid": 3,
+      "peak": 222,
+      "status": "active"
+    },
+    {
+      "seed": 180231,
+      "policy": "legacy 4",
+      "seconds": 2352.5,
+      "highestRaid": 3,
+      "peak": 234,
+      "status": "defeat"
+    }
+  ],
+  "benchmark": {
+    "economy": [
+      {
+        "population": 100,
+        "simulatedSeconds": 60,
+        "wallMs": 65,
+        "averageTickMs": 0.109,
+        "saveKB": 45,
+        "restored": 103
+      },
+      {
+        "population": 500,
+        "simulatedSeconds": 60,
+        "wallMs": 159,
+        "averageTickMs": 0.265,
+        "saveKB": 206,
+        "restored": 502
+      },
+      {
+        "population": 1000,
+        "simulatedSeconds": 60,
+        "wallMs": 235,
+        "averageTickMs": 0.391,
+        "saveKB": 406,
+        "restored": 1002
+      }
+    ],
+    "combat": {
+      "startingWarriors": 1000,
+      "startingEnemies": 30,
+      "simulatedSeconds": 30,
+      "wallMs": 7521,
+      "averageTickMs": 25.071,
+      "remainingWarriors": 969,
+      "remainingEnemies": 30
+    }
+  },
+  "productionHashes": [
+    {
+      "file": "index.html",
+      "sha256": "5d19fc37c8dd66f007412ddda89c9ef002be5a182754384cc762794b5024ec7c"
+    },
+    {
+      "file": "src/engine/engine.js",
+      "sha256": "ab09bf8e86c09bb1fcd42c124ab7af8eb3530788adde001c14429ffc85959487"
+    },
+    {
+      "file": "src/engine/session.js",
+      "sha256": "6f82c34b0acdc53a1de3c3a8dc1f280de8e885f6668e02dd351064c58ae9de04"
+    },
+    {
+      "file": "src/engine/save.js",
+      "sha256": "b145c90b96b8e9b37402a923d0a94677ea70291c77b7be6b7aad846d7cdf1ad8"
+    },
+    {
+      "file": "src/engine/view.js",
+      "sha256": "e7c0d626be78e5fc0c84f9d0708ce8d15ea57ffe7575428ef960d7b5558de8c1"
+    },
+    {
+      "file": "src/engine/lineages.js",
+      "sha256": "1dc86e385fa96a7cfde70c42856236b32c3df4493900f071786ae59b1a9a8595"
+    },
+    {
+      "file": "src/engine/systems/combat.js",
+      "sha256": "e9b421e1daf5f4a98e827aa7838c4ef2af02c9c9a6737aed8770e1008ab41b28"
+    },
+    {
+      "file": "src/ui/app.js",
+      "sha256": "140d55c499e4f6df352c55e89763caa46e06fe6d8ac2864dcf24bcfbf06a9b65"
+    },
+    {
+      "file": "src/ui/renderer.js",
+      "sha256": "a71e5c096f97e893395f4d64293b5c0680abbf5b596ee9797f5bd5011c7348f4"
+    },
+    {
+      "file": "src/ui/style.css",
+      "sha256": "d8f0e36cab8b861d0bc10addc1c578bf52da922774ae548e6da40ab7acd59156"
+    }
+  ]
+}

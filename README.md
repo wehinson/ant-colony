@@ -52,21 +52,38 @@ On a touch screen, use the Dig tool to designate tiles. The map controls provide
 - Actual queen death ends the run. Legacy seeds equal `max(1, 4 × highest completed raid + floor(sqrt(peak living worker population)))`. Committed staff count toward that peak; replacement births do not inflate it.
 - Five permanent improvement branches can be purchased between colonies. A new colony resets the world and ordinary improvements and keeps legacy currency, permanent improvements, and records.
 
-The larger enemy design pool, multiplayer, offline progress, multiple queens, and extra ant species are outside this release.
+The larger enemy design pool, multiplayer, offline progress, and multiple queens are outside this release.
+
+## A new ant with each colony
+
+The game uses William's [ranked list of 50 ants](docs/ants-top-50.md), found in `C:\Code\mapcrush-main\docs\ants-top-50.md`. The first colony is rank 50, Anergates atratulus. Each defeat and restart unlocks the next rank. Rank 1 is the driver ant / siafu. The next restart begins a stronger cycle through the list, with no fixed number of cycles.
+
+Select the ant card below construction to see the collection and the next ant. Each later lineage improves the colony and has an affinity for one permanent improvement branch. These are game variants: all lineages keep one queen and worker crews, including source species whose real biology differs. Lineage strength does not change raid budgets. Permanent purchases remain a separate choice between runs.
+
+## Diagnostics and practice
+
+Open **Save and settings → Diagnostics & practice controls** to inspect delivered food, prey, salvage, digging, population, raid budget, and time lost to bottlenecks. **Export gameplay report** saves a report with recent samples, orders, and raid plans.
+
+**Open practice copy** makes an isolated copy of your colony. It has engine controls to step time, fill resources, add ants, unlock structures, excavate queued tiles, spawn enemies, start a warning, heal, clear attackers, or end the practice run. Practice cannot award legacy seeds or unlock another ant. **Return to real colony** restores the original state. Reloading also opens the real colony.
 
 ## Engine and interface
 
 The engine has no DOM, Canvas, browser storage, or graphics dependency.
 
-| File                    | Responsibility                                                                                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `src/engine/engine.js`  | Commands, validation, 100 ms simulation steps, economy, combat, raids, prestige, and complete save state |
-| `src/engine/world.js`   | Sparse excavated terrain, incrementally stored terrain chunks, paths, connectivity, and line of sight    |
-| `src/engine/catalog.js` | Building, enemy, improvement, and timing definitions                                                     |
-| `src/engine/view.js`    | Derived player-facing values, availability, labels, alerts, and placement inspection                     |
-| `src/engine/session.js` | Host-independent pause, storage, import/export, visibility suspension, and autosave workflow             |
-| `src/ui/app.js`         | DOM display and input binding; sends commands to the session                                             |
-| `src/ui/renderer.js`    | Canvas drawing, camera controls, sprite interpolation, and visual detail limits                          |
+| File                                 | Responsibility                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `src/engine/engine.js`               | Commands, validation, 100 ms simulation steps, state, movement, and subsystem composition             |
+| `src/engine/systems/`                | Excavation, rooms, assignment, foraging, individual combat, defenses, raids, and prestige             |
+| `src/engine/world.js`                | Sparse excavated terrain, incrementally stored terrain chunks, paths, connectivity, and line of sight |
+| `src/engine/catalog.js`              | Building, enemy, improvement, and timing definitions                                                  |
+| `src/engine/lineages.js`             | The 50 ranked ants, restart progression, affinities, and strength                                     |
+| `src/engine/save.js`                 | Save validation and migration from the earlier local format                                           |
+| `src/engine/spatial.js`              | Stable spatial targeting for large combat groups                                                      |
+| `src/engine/metrics.js` / `debug.js` | Bounded reports and isolated practice commands                                                        |
+| `src/engine/view.js`                 | Derived player-facing values, availability, labels, alerts, and placement inspection                  |
+| `src/engine/session.js`              | Host-independent pause, storage, import/export, visibility suspension, and autosave workflow          |
+| `src/ui/app.js`                      | DOM display and input binding; sends commands to the session                                          |
+| `src/ui/renderer.js`                 | Canvas drawing, camera controls, sprite interpolation, and visual detail limits                       |
 
 The engine uses a fixed step and a saved pseudo-random state. Paths are cached by world revision. The group controller runs less often than individual movement. The renderer draws only visible terrain and actors, with reduced civilian detail when zoomed out. Rendering never changes production, combat, or spawns.
 
@@ -95,6 +112,7 @@ console.log(restored.getStats());
 npm test               # Engine, combat, saving, and full-loop tests
 npm run check          # Syntax checks for all source and scripts
 npm run test:balance   # Reproducible natural-play policies across several seeds
+npm run test:gameplay  # 24 generated colonies, invariants, reloads, defeat and restart
 npm run benchmark      # 100 / 500 / 1,000-worker stress checks and save reloads
 npm run build          # Produce the standalone static game in dist/
 npm run preview        # Serve dist/ at localhost:5173
@@ -102,10 +120,10 @@ npm run preview        # Serve dist/ at localhost:5173
 
 Stop the development server before running the preview server on the same port. To use another port in PowerShell, set `$env:PORT = '5174'` before the command.
 
-The balance script uses public player commands and earned resources. It does not grant free resources or resolve combat by a score. The legacy cases use purchased-upgrade levels as a separate comparison. First-run defeat time is a tuning target, not a scripted loss.
+The balance scripts use public player commands and earned resources. They do not grant resources or resolve combat by a score. Legacy and later-lineage cases set their permanent starting state as separate comparisons. First-run defeat time is a tuning target, not a scripted loss. Generated gameplay checks cover idle, economy, balanced, fortress, explorer, and mixed-order policies. Full reports go into the ignored `artifacts/` folder.
 
 `node scripts/qa-fixtures.mjs` creates ignored, natural-play saves for early construction, a developed colony, and defeat. These can be imported to test the interface. They are not bundled with the production game.
 
 ## Local development status
 
-The project stays local on `working`, as requested. It has not been published, deployed, or pushed to GitHub. See `BRANCHES.md` for the final verification record.
+The project stays local on `working`, as requested. The eleven system branches and the second audit branch are integrated there and retained for review. It has not been published, deployed, or pushed to GitHub. See [the system audit](docs/system-audit.md), [recorded simulation results](docs/verification-results.json), and [the branch record](BRANCHES.md).

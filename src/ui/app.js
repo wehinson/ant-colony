@@ -134,14 +134,14 @@ function renderUI() {
       resource(
         "Population",
         "ant",
-        `${view.population}<small> ants</small>`,
+        `${view.population}<small> ${view.populationUnit}</small>`,
         `${view.committed} committed to posts`,
       ) +
       resource(
         "Mobile warriors",
         "shield",
         `${view.mobile}<small> / ${view.mobileCap}</small>`,
-        `${view.raid.highest} raids survived`,
+        view.raid.survived,
       ) +
       resource(
         "Our queen",
@@ -200,7 +200,7 @@ function renderUI() {
     "raid-card",
     `<div class="raid-top"><span>${icon("shield", 13)} &nbsp; ${view.raid.urgency === "peace" ? "ON THE HORIZON" : "PROTECT THE COLONY"}</span><span>${view.raid.urgency === "peace" ? "PREPARE" : "ALERT"}</span></div><h3>${escape(view.raid.title)}</h3><div class="raid-bottom"><span class="raid-detail">${escape(view.raid.detail)}</span><span class="raid-clock">${view.raid.timer}</span></div>`,
   );
-  $("worker-total").textContent = `${view.population} ants`;
+  $("worker-total").textContent = view.populationLabel;
   html(
     "crews",
     view.crews

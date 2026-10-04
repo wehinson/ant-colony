@@ -1,39 +1,60 @@
 # Ant Colony work log
 
-- Branch: `working`
+- Integration branch: `working`
 - Agent: Codex
-- Status: Active — first-principles system audit
-- Version: 0.1.0 (first complete game; not shipped)
-- Updated: 2026-10-03
-- Scope: independent local system branches, ranked ant lineages, debug tools, balance instrumentation, and a second audit with automated gameplay simulations.
-- Verification: 46 tests pass; syntax checks and production build pass.
-- Backup: local Git commits only, as William requested. No remote or deployment was created.
+- Status: Complete — system implementation and second-pass audit
+- Version: 0.1.0, save format 2
+- Verified: 2026-10-04
+- Backup: local Git only, as William requested. No remote or deployment was created.
 
-## Work on working
+## Independent system branches
 
-The complete game is implemented: engine-owned clock and rules, expandable terrain, ordered parallel digging, all six economic chambers, military construction, individual combat, raids, destruction, repairs, shelter, queen relocation, defeat, permanent improvements, subsequent colonies, and full save import/export.
+Each requested system was implemented, directly tested, committed on its own branch, and merged into `working`. The branches remain available for review. The second pass is also integrated into `working`.
 
-The UI binds player commands and draws interpolated engine snapshots. It includes placement previews, crew controls, structure upgrades, warnings, a journal, help, map navigation, and layouts for narrow screens.
+| Branch                          | System checkpoint                   |
+| ------------------------------- | ----------------------------------- |
+| `codex/infinite-excavation`     | `17534a0`                           |
+| `codex/room-placement`          | `ff53ace`                           |
+| `codex/ant-assignment`          | `40e60cb`                           |
+| `codex/foraging-simulation`     | `05d7451`                           |
+| `codex/individual-combat`       | `c08fb6c`                           |
+| `codex/raids`                   | `b7abcb6`                           |
+| `codex/defensive-structures`    | `114d8e7`                           |
+| `codex/prestige-lineages`       | `b896ef0`                           |
+| `codex/save-system`             | `ab1bd10`                           |
+| `codex/balance-instrumentation` | `28963c6`                           |
+| `codex/debug-admin`             | `4351eb5`                           |
+| `codex/second-pass-audit`       | `cb9633c` plus final audit evidence |
 
-## Verification
+No shipped `main` branch existed at the start of this task. None was created or changed. Integration used merge commits and did not rewrite history.
 
-- `npm test`: 46 passing tests. Coverage includes the full natural colony loop, accounting, path constraints, combat mechanics, saved random state, corrupt saves, and mixed player orders with repeated reloads.
-- `npm run check`: all source and script syntax checks pass.
-- `npm run build`: standalone static game built successfully in `dist/`.
-- `npm run test:balance`: 12 scenarios across three seeds. Idle or economy-only first colonies fell at 13:29–14:05. Defended colonies lasted 26:31–36:18. All three level-four legacy scenarios were alive at the 40-minute test limit. This limit applies only to the test, not the game.
-- `npm run benchmark`: 100, 500, and 1,000-worker simulations and save reloads pass. A separate 1,000-ant / 30-enemy combat check ran 300 simulation steps in about 1.93 seconds on this machine.
-- Browser UI events verified construction previews, placing and canceling blueprints, digging, help, saving, export, valid and invalid import, permanent purchases, and starting colony 02. Camera controls did not change the serialized simulation.
-- Layout checks at 390, 768, and 1440 pixels passed without horizontal overflow. Captured map images were inspected.
-- Production browser check: founding completed, the first worker hatched, the engine clock advanced without relying on render frames, and no script errors were recorded. The production game was left paused for the player.
-- SHA-256 checks matched source files, production files, and HTTP-served files for the engine, session, UI, renderer, stylesheet, and entry page.
-- `git diff --check`: no whitespace errors.
+## Complete game and ant collection
 
-## Caveat and launch
+The headless engine owns all rules, timing, commands, saves, and debug actions. Separate systems handle the infinite grid, rooms, assignment, foraging, individual combat, defenses, raids, and prestige. The UI draws interpolated snapshots and sends orders.
 
-T3's native full-page screenshot and viewport-resize tools failed in this session. Browser DOM checks, same-origin responsive frames, UI events, and captured canvas images were used. A native full-page visual review remains unverified.
+William's ranking was found at `C:\Code\mapcrush-main\docs\ants-top-50.md` and copied into [the project source record](docs/ants-top-50.md). The other project was not changed. Each completed colony unlocks the next ant, from rank 50 through rank 1, then starts a stronger cycle. Permanent purchases remain separate. All 50 names, scientific names, regions, and tiers are retained.
 
-Production game: `http://localhost:5174` while the current preview server is running. Development game: `http://localhost:5173`.
+Practice controls use a separate copy and save key. They cannot change real-colony currency, purchased improvements, or ant unlocks. Settings provides both save export/import and a diagnostic report export.
 
-To restart later, run `npm run dev` from this folder and open `http://localhost:5173`. No dependency installation is needed. The full instructions are in `README.md`.
+## Final verification
 
-No known engine or gameplay defect remains from these checks. The work stays on `working`; main, GitHub, and deployment were not changed. Recommended next release step: ship this version after the remaining full-page visual check.
+- **78 engine tests passed.** These cover the full colony loop, rule accounting, physical movement and combat, parallel excavation, invalid input, deterministic replay, save recovery, practice isolation, and 102 lineage restarts.
+- **24 generated gameplay scenarios passed, with 1,087 save round trips.** Seven natural defeats verified one-time awards, a purchase, the next ant, and founding again. Fortress cases built every one of the 14 structure types with earned resources.
+- **600 generated raid compositions** passed budget, unlock, and special-enemy limits inside the direct test suite.
+- **12 longer balance scenarios completed.** Idle/economy defeat: 13:28–13:39. Defended defeat: 34:51–37:19. Level-four permanent improvements: one defeat at 39:12 and two alive at the 40-minute limit. These results use a simpler defense policy than the fortress scenarios, which all reached 40 minutes with permanent improvements.
+- **Population and combat load checks passed.** Sixty simulated seconds with 1,000 starting workers took 235 ms on this machine; the saved state restored exactly. Thirty simulated seconds with 1,000 warriors and 30 beetles took 7.52 seconds (25.1 ms per 100 ms tick). This artificial combat load includes real damage and an exact save reload.
+- **Authorized browser checks passed.** Founding, construction, paused orders, cancellation, dig controls, raids, saving, export, import, visible invalid-file errors, permanent purchases, next colony, the 50-ant collection, practice controls, and restoration were checked through the UI.
+- **Phone, tablet, and desktop layouts were inspected.** The 390, 768, and 1440 pixel checks found no horizontal page overflow. Full-page screenshots were captured and reviewed. T3's browser tools were unavailable in this session; the checks used the Codex in-app browser for the local game.
+- **Production build passed.** The built game completed founding, loaded natural-play saves, advanced through raid waves, and showed individual attackers and casualties. No browser script errors or warnings were recorded.
+- **Ten SHA-256 checks matched** the source, built files, and files served by the local production server: entry page, engine, session, save, view, lineages, combat, UI, renderer, and stylesheet.
+- **Syntax and whitespace checks passed.** No runtime package installation is required.
+
+See [the system-by-system audit](docs/system-audit.md) and [machine-readable results](docs/verification-results.json). Full generated reports and screenshots remain in the ignored `artifacts/` folder and can be regenerated with the commands in [README.md](README.md).
+
+## Play locally
+
+Production preview: `http://localhost:5174` while this session's server runs. Development preview: `http://localhost:5173`.
+
+To restart later, run `npm run dev` from this folder and open `http://localhost:5173`. To serve the built game, run `npm run preview`; it also uses port 5173 unless `PORT` is set. Browser saves belong to that browser and port. Use export/import to move a colony between previews.
+
+The game has no fixed terrain or population cap. Memory and CPU remain practical limits. No check proves indefinite survival or the absence of every possible defect; no known failure remains in the completed checks.
