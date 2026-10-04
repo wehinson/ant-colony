@@ -380,6 +380,12 @@ export const RESEARCH = {
   },
 };
 export const key = (x, y) => `${x},${y}`;
+// Leave room for footprints and chunk neighbors within JavaScript integer precision.
+export const validTile = (x, y) =>
+  Number.isSafeInteger(x) &&
+  Number.isSafeInteger(y) &&
+  Math.abs(x) < Number.MAX_SAFE_INTEGER - 1024 &&
+  Math.abs(y) < Number.MAX_SAFE_INTEGER - 1024;
 export const cell = (p) => ({
   x: Math.round(p.x) || 0,
   y: Math.round(p.y) || 0,

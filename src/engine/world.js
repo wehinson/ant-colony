@@ -72,26 +72,74 @@ export function pathfind(
   if (!isOpen(world, start.x, start.y) || !isOpen(world, end.x, end.y))
     return null;
   if (start.x === end.x && start.y === end.y) return [];
-  const minX = Math.min(world.bounds.minX, start.x - 1, end.x - 1),
-    maxX = Math.max(world.bounds.maxX, start.x + 1, end.x + 1);
-  const visited = new Map([[key(start.x, start.y), null]]),
-    queue = [start];
+  // The surface is an open line, not millions of stored tiles. Link only its
+  // entrances and relevant endpoints. A far blueprint cannot enlarge a search.
+  const anchors = new Set([
+    start.x,
+    end.x,
+    ...entrances(world).map((p) => p.x),
+  ]);
+  if (danger)
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.y > 2) continue;
+      for (let dx = -2; dx <= 2; dx++) anchors.add(Math.round(e.x) + dx);
+    }
+  const surface = [...anchors].sort((a, b) => a - b);
+  const surfaceIndex = new Map(surface.map((x, i) => [x, i]));
+  const adjacent = (p) => {
+    if (p.y !== 0) return neighbors(p);
+    const i = surfaceIndex.get(p.x),
+      result = [{ x: p.x, y: 1 }];
+    if (i > 0) result.push({ x: surface[i - 1], y: 0 });
+    if (i + 1 < surface.length) result.push({ x: surface[i + 1], y: 0 });
+    return result;
+  };
+  const visited = new Map([[key(start.x, start.y), null]]);
+  const costs = new Map([[key(start.x, start.y), 0]]);
+  const queue = [];
+  const push = (node) => {
+    queue.push(node);
+    let i = queue.length - 1;
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (queue[parent].priority <= node.priority) break;
+      queue[i] = queue[parent];
+      i = parent;
+    }
+    queue[i] = node;
+  };
+  const pop = () => {
+    const first = queue[0],
+      last = queue.pop();
+    if (queue.length) {
+      let i = 0;
+      while (i * 2 + 1 < queue.length) {
+        let child = i * 2 + 1;
+        if (
+          child + 1 < queue.length &&
+          queue[child + 1].priority < queue[child].priority
+        )
+          child++;
+        if (queue[child].priority >= last.priority) break;
+        queue[i] = queue[child];
+        i = child;
+      }
+      queue[i] = last;
+    }
+    return first;
+  };
+  push({ p: start, cost: 0, priority: 0 });
   let found = false;
-  for (let i = 0; i < queue.length; i++) {
-    const p = queue[i];
+  while (queue.length) {
+    const { p, cost } = pop();
+    if (cost !== costs.get(key(p.x, p.y))) continue;
     if (p.x === end.x && p.y === end.y) {
       found = true;
       break;
     }
-    for (const n of neighbors(p)) {
+    for (const n of adjacent(p)) {
       const k = key(n.x, n.y);
-      if (
-        visited.has(k) ||
-        n.x < minX ||
-        n.x > maxX ||
-        !isOpen(world, n.x, n.y)
-      )
-        continue;
+      if (!isOpen(world, n.x, n.y)) continue;
       if (avoidBarriers && blockedAt(state, n.x, n.y)) continue;
       if (
         danger &&
@@ -100,8 +148,15 @@ export function pathfind(
         )
       )
         continue;
+      const nextCost = cost + Math.abs(n.x - p.x) + Math.abs(n.y - p.y);
+      if (nextCost >= (costs.get(k) ?? Infinity)) continue;
       visited.set(k, p);
-      queue.push(n);
+      costs.set(k, nextCost);
+      push({
+        p: n,
+        cost: nextCost,
+        priority: nextCost + Math.abs(n.x - end.x) + Math.abs(n.y - end.y),
+      });
     }
   }
   if (!found) return null;

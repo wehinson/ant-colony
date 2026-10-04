@@ -1,3 +1,4 @@
+import { excavationSystem } from "./systems/excavation.js";
 import {
   VERSION,
   STEP,
@@ -8,6 +9,7 @@ import {
   PERMANENT,
   RESEARCH,
   key,
+  validTile,
   cell,
   center,
   distance,
@@ -231,11 +233,7 @@ export class ColonyEngine {
   preview(type, x, y, relocate = false) {
     const s = this.state,
       d = BUILDINGS[type];
-    if (
-      !Object.hasOwn(BUILDINGS, type) ||
-      !Number.isSafeInteger(x) ||
-      !Number.isSafeInteger(y)
-    )
+    if (!Object.hasOwn(BUILDINGS, type) || !validTile(x, y))
       return { valid: false, reason: "Choose a valid grid tile.", tiles: [] };
     const tiles = footprint(type, x, y),
       buried = tiles.filter((p) => !isOpen(s.world, p.x, p.y)).length;
@@ -362,10 +360,19 @@ export class ColonyEngine {
     switch (c.type) {
       case "dig": {
         const { x, y } = c;
-        if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || y < 1)
+        if (!validTile(x, y) || y < 1)
           return this.notify("Only underground dirt can be excavated.");
         const existing = s.jobs.find((j) => j.x === x && j.y === y);
         if (existing && c.mode !== "add") {
+          if (
+            s.status === "founding" &&
+            (existing.blueprint ===
+              s.buildings.find((b) => b.type === "queen")?.id ||
+              (x === 0 && y <= 2))
+          )
+            return this.notify(
+              "The queen needs this tile to found the colony.",
+            );
           this._cancelJob(existing.id);
           return this.ok("Excavation order canceled.");
         }
@@ -446,27 +453,6 @@ export class ColonyEngine {
       default:
         return this.notify("Unknown command.");
     }
-  }
-  _designate(x, y, blueprint = null) {
-    if (isOpen(this.state.world, x, y)) return;
-    let job = this.state.jobs.find((j) => j.x === x && j.y === y);
-    if (!job) {
-      job = { id: this.id("dig"), x, y, progress: 0, owner: null, blueprint };
-      this.state.jobs.push(job);
-    }
-    ensureTerrain(this.state.world, x, y);
-    return job;
-  }
-  _cancelJob(id) {
-    const s = this.state;
-    const job = s.jobs.find((j) => j.id === id);
-    if (!job) return;
-    for (const a of [s.queen, ...s.ants])
-      if (a.jobId === id) {
-        a.jobId = null;
-        a.path = [];
-      }
-    s.jobs = s.jobs.filter((j) => j.id !== id);
   }
   _place(type, x, y) {
     const s = this.state,
@@ -1001,54 +987,6 @@ export class ColonyEngine {
         s.eggs.push({ id: this.id("egg"), buildingId: b.id, progress: 0 });
         used++;
       }
-    }
-  }
-  _dig(a, dt, st, queen = false) {
-    const s = this.state;
-    let job = s.jobs.find((j) => j.id === a.jobId && j.owner === a.id);
-    if (!job) {
-      a.jobId = null;
-      for (const j of s.jobs) {
-        if (j.owner) continue;
-        const spots = neighbors(j)
-          .filter((p) => isOpen(s.world, p.x, p.y))
-          .map((p) => ({ p, path: this.route(a, p) }))
-          .filter((o) => o.path !== null)
-          .sort((a, b) => a.path.length - b.path.length);
-        if (!spots.length) continue;
-        job = j;
-        job.owner = a.id;
-        a.jobId = job.id;
-        a.digSpot = spots[0].p;
-        a.path = [];
-        break;
-      }
-    }
-    if (!job) {
-      if (!queen) this._repairOrSalvage(a, dt);
-      return;
-    }
-    if (!a.digSpot || !isOpen(s.world, a.digSpot.x, a.digSpot.y)) {
-      job.owner = null;
-      a.jobId = null;
-      return;
-    }
-    if (!this.move(a, a.digSpot, queen ? 1.2 : this.workerSpeed(), dt)) return;
-    if (s.energy <= 0.001) return;
-    const energy = Math.min(s.energy, dt * 2.8),
-      work = energy / 2.8;
-    const hardness = 2.8 + terrainValue(s.seed, job.x, job.y) * 1.1;
-    const rate =
-      (1 + s.meta.upgrades.excavation * 0.18) *
-      st.efficiency *
-      (queen ? 1.5 + s.meta.upgrades.founding * 0.35 : 1);
-    job.progress = Math.min(1, job.progress + (work * rate) / hardness);
-    s.energy -= energy;
-    if (job.progress >= 1) {
-      excavate(s.world, job.x, job.y);
-      s.jobs = s.jobs.filter((j) => j.id !== job.id);
-      a.jobId = null;
-      this.effect("dig", job, job, "#b69a72", 0.5);
     }
   }
   workerSpeed() {
@@ -1815,6 +1753,8 @@ export class ColonyEngine {
     return new ColonyEngine({ state: parsed.state });
   }
 }
+
+Object.assign(ColonyEngine.prototype, excavationSystem);
 
 function validateSave(s) {
   const finite = (x) => typeof x === "number" && Number.isFinite(x),
