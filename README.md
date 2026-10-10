@@ -4,7 +4,7 @@ A complete, local, single-player colony game. Excavate the nest, grow the workfo
 
 ## Play
 
-GitHub source: https://github.com/wehinson/ant-colony. GitHub Pages setup and save-transfer steps are in [hosting instructions](docs/hosting.md).
+[Play online](https://wehinson.github.io/ant-colony/) · [GitHub source](https://github.com/wehinson/ant-colony). GitHub Pages setup and save-transfer steps are in [hosting instructions](docs/hosting.md).
 
 For the built game at the GitHub Pages project path, run `npm run test:serve` and open **http://localhost:5174/ant-colony/**.
 
@@ -130,4 +130,4 @@ The balance scripts use public player commands and earned resources. They do not
 
 ## Local development status
 
-The October 9 request authorizes GitHub migration. The source is backed up in `wehinson/ant-colony`; the local test server uses the Pages project path. The eleven system branches and second audit are integrated into `working`. See [hosting status](docs/hosting.md), [the system audit](docs/system-audit.md), [recorded simulation results](docs/verification-results.json), and [the branch record](BRANCHES.md).
+The October 9 release publishes version 0.1.1 from `main` in `wehinson/ant-colony`, with William's approval to make the repository public. The local test server uses the same Pages project path. All eleven system branches and the second audit are integrated into the release; their history remains in Git. See [hosting instructions](docs/hosting.md), [the system audit](docs/system-audit.md), [recorded simulation results](docs/verification-results.json), and [the branch record](BRANCHES.md).

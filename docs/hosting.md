@@ -2,6 +2,8 @@
 
 Source repository: https://github.com/wehinson/ant-colony
 
+Play online: https://wehinson.github.io/ant-colony/
+
 The game is a static site. Its engine runs in the player's browser. GitHub Pages hosts the built files; it does not need a database or a game server.
 
 ## Test locally
@@ -20,7 +22,7 @@ The workflow in `.github/workflows/pages.yml` runs engine and HTTP hosting tests
 
 GitHub repository settings must select **Pages → Build and deployment → GitHub Actions**. The expected site address is https://wehinson.github.io/ant-colony/. A push to `main` or a manual workflow run on `main` deploys the tested build. A failed test prevents deployment.
 
-On October 9, 2026 GitHub rejected Pages activation because the current account plan does not support Pages for this private repository. Publication requires approval to make the repository public, or a plan that supports private-repository Pages. The repository remains private until that is resolved.
+On October 9, 2026 William approved making the repository public and publishing the game. The repository is public and GitHub Pages is enabled with HTTPS. This resolved the account's private-repository Pages restriction without changing the account plan.
 
 ## Verify a release
 
