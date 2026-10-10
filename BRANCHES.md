@@ -1,5 +1,21 @@
 # Ant Colony work log
 
+## GitHub Pages migration — October 9, 2026
+
+- Agent: Codex. Release branch: `main`. Version: 0.1.1.
+- Status: GitHub Pages enabled with HTTPS; release workflow publishes the tested `main` commit. Local test server is ready.
+- Public source: `https://github.com/wehinson/ant-colony`. William explicitly approved public visibility and publication on October 9. This supersedes the earlier local-only restriction.
+- Live game: `https://wehinson.github.io/ant-colony/`. Release metadata records the exact source commit and all game-file hashes.
+- Changed root-relative asset and home links to relative links so the complete module graph works at `/ant-colony/`.
+- Added a test/build/deploy workflow; only `main` publishes. Website artifacts contain only the built game.
+- Added a local Pages-style test server, release metadata and file hashes, and a hosted-release verification command.
+- Verification: 81 tests pass, including complete module loading at both root and `/ant-colony/`, redirect behavior, and rejection of private and outside paths. Syntax and production build pass.
+- GitHub initially returned HTTP 422 for private-repository Pages. William approved public visibility; Pages activation then succeeded. No billing change was made.
+- The browser tool blocked the preview check under its URL policy. Direct HTTP module-loading tests and complete artifact hash checks are the hosting verification for this release. The previous full gameplay UI audit remains recorded below.
+- Local test URL: `http://localhost:5174/ant-colony/`. Restart with `npm run test:serve`. See [hosting instructions](docs/hosting.md).
+
+## Previous complete-game verification — October 4, 2026
+
 - Integration branch: `working`
 - Agent: Codex
 - Status: Complete — system implementation and second-pass audit
