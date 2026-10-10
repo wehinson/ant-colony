@@ -1,5 +1,19 @@
 # Ant Colony work log
 
+## GitHub Pages migration — October 9, 2026
+
+- Agent: Codex. Branch: `working`. Version prepared: 0.1.1.
+- Status: Hosting setup and local test server ready; GitHub Pages activation needs a repository visibility decision.
+- Source backup: `https://github.com/wehinson/ant-colony`, currently private. The current request supersedes the earlier local-only restriction.
+- Changed root-relative asset and home links to relative links so the complete module graph works at `/ant-colony/`.
+- Added a test/build/deploy workflow; only `main` publishes. Website artifacts contain only the built game.
+- Added a local Pages-style test server, release metadata and file hashes, and a hosted-release verification command.
+- Verification: 81 tests pass, including complete module loading at both root and `/ant-colony/`, redirect behavior, and rejection of private and outside paths. Syntax and production build pass.
+- GitHub returned HTTP 422: the current plan does not support Pages for this private repository. No visibility or billing change was made.
+- Local test URL: `http://localhost:5174/ant-colony/`. Restart with `npm run test:serve`. See [hosting instructions](docs/hosting.md).
+
+## Previous complete-game verification — October 4, 2026
+
 - Integration branch: `working`
 - Agent: Codex
 - Status: Complete — system implementation and second-pass audit
