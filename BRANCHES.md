@@ -74,3 +74,15 @@ Production preview: `http://localhost:5174` while this session's server runs. De
 To restart later, run `npm run dev` from this folder and open `http://localhost:5173`. To serve the built game, run `npm run preview`; it also uses port 5173 unless `PORT` is set. Browser saves belong to that browser and port. Use export/import to move a colony between previews.
 
 The game has no fixed terrain or population cap. Memory and CPU remain practical limits. No check proves indefinite survival or the absence of every possible defect; no known failure remains in the completed checks.
+
+## Cloud paused-order persistence correction — 2026-10-21
+
+- Task: `HOME-PROJECT-IDEAS-20261021/idea005/candidateANT-20261021-01/ant-session-realengine-20261021-v1`.
+- Agent: Codex, sole hosted-cloud worker. Branch: `task/ant-session-persistence-20261021`, from main `d0fe60a063de24c043497523945efdcb25ecf1eb`. No version bump, merge, or deployment.
+- Status: verification in progress; isolated unmerged correction for review.
+- Confirmed on unchanged base with the actual GameSession/ColonyEngine: start, pause, accepted dig at (2,4), 800 foreground updates of 0.025 seconds. Job exists in memory, simulation time stays zero, zero subsequent saves, and a new session loses the job. No unload or suspension hook was used.
+- UI source path: `src/ui/app.js` map input sends dig through the command wrapper to GameSession. Normal pagehide/beforeunload saves mitigate ordinary closes but do not prevent abrupt-loss cases.
+- Correction: accepted commands mark pending changes; existing foreground updates flush within ten elapsed seconds independently of simulation time. Success clears pending changes; failures retry on the same interval. No new timer. Practice state keeps its save key and restores pending real-colony changes after a failed pre-practice save. Corrupt saves remain protected.
+- Verification so far: original `node artifacts/paused-proof.mjs` failed on base (exit 1, missing reloaded job) and passed after correction (exit 0). Executable regression copied beside an unchanged `git archive` of the exact base: `node --test --test-name-pattern='real accepted paused excavation' artifacts/base/tests/session-persistence.test.js` failed (exit 1); `node --test tests/session-persistence.test.js` passed 8/8 (exit 0). `npm test` passed 86/86 before three additional lifecycle tests, which passed in the focused run. Syntax and build passed; broader README checks are running.
+- Tradeoff: abrupt termination can still lose up to ten seconds of foreground changes; no saves can succeed while storage is unavailable. The existing simulation-based periodic save remains. Accepted no-op commands also record diagnostics and may cause one coalesced save.
+- UI gap: no browser, visual, or user interaction verification. No preview server or deployment is part of this task.
