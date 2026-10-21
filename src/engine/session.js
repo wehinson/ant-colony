@@ -11,6 +11,8 @@ export class GameSession {
     this.lastSaved = 0;
     this.lastSaveAttempt = 0;
     this.suspended = false;
+    this.dirty = false;
+    this.saveElapsed = 0;
     if (storage) {
       try {
         const text = storage.getItem("ant-colony-save");
@@ -39,14 +41,20 @@ export class GameSession {
     if (command.type === "sandbox")
       return command.value ? this.enterSandbox() : this.leaveSandbox();
     const result = this.engine.command(command);
-    if (result.ok && ["prestige", "newRun", "pause"].includes(command.type))
-      this.save();
+    if (result.ok) {
+      this.dirty = true;
+      if (["prestige", "newRun", "pause"].includes(command.type)) this.save();
+    }
     return result;
   }
   advance(seconds) {
     if (this.suspended) return;
     this.engine.advance(seconds);
+    // Foreground elapsed time keeps paused orders durable without advancing the
+    // simulation. Reuse the host clock; do not create another timer.
+    if (Number.isFinite(seconds) && seconds > 0) this.saveElapsed += seconds;
     if (
+      (this.dirty && this.saveElapsed >= 10) ||
       this.engine.state.time - this.lastSaveAttempt >= 10 ||
       (this.engine.state.status === "defeat" &&
         this.lastSaveAttempt !== this.engine.state.time)
@@ -123,6 +131,9 @@ export class GameSession {
       return { ok: false, message: "You are already in a practice copy." };
     this.save();
     this.sandboxOriginal = this.export();
+    this.sandboxOriginalDirty = this.dirty;
+    this.dirty = false;
+    this.saveElapsed = 0;
     this.engine = ColonyEngine.deserialize(this.sandboxOriginal);
     this.engine.state.debug.enabled = true;
     this.engine.state.paused = true;
@@ -141,6 +152,9 @@ export class GameSession {
       };
     this.engine = ColonyEngine.deserialize(this.sandboxOriginal);
     this.sandboxOriginal = null;
+    this.dirty = !!this.sandboxOriginalDirty;
+    this.sandboxOriginalDirty = false;
+    this.saveElapsed = 0;
     this.lastSaveAttempt = this.engine.state.time;
     this.saveStatus =
       "Real colony restored. Practice changes were kept separate.";
@@ -154,8 +168,10 @@ export class GameSession {
   }
   import(text) {
     const replacement = ColonyEngine.deserialize(text);
-    if (replacement.state.debug.enabled && !this.engine.state.debug.enabled)
+    if (replacement.state.debug.enabled && !this.engine.state.debug.enabled) {
       this.sandboxOriginal = this.export();
+      this.sandboxOriginalDirty = this.dirty;
+    }
     if (!replacement.state.debug.enabled) this.sandboxOriginal = null;
     this.engine = replacement;
     this.engine.state.paused = true;
@@ -163,6 +179,7 @@ export class GameSession {
     this.engine.state.accumulator = 0;
     this.corruptSave = false;
     this.lastSaved = 0;
+    this.dirty = true;
     this.save();
     return {
       ok: true,
@@ -170,12 +187,15 @@ export class GameSession {
     };
   }
   save() {
+    // Failed writes keep pending changes, but retry only after another interval.
+    this.saveElapsed = 0;
     this.lastSaveAttempt = this.engine.state.time;
     if (!this.storage) return false;
     if (this.corruptSave) return false;
     if (this.engine.state.debug.enabled) {
       try {
         this.storage.setItem("ant-colony-sandbox", this.export());
+        this.dirty = false;
         this.saveStatus =
           "Practice copy saved separately. Real colony is safe.";
         return true;
@@ -195,6 +215,7 @@ export class GameSession {
       }
       this.storage.setItem("ant-colony-save", payload);
       this.lastGoodSave = payload;
+      this.dirty = false;
       this.lastSaved = this.engine.state.time;
       this.saveStatus = "Saved on this device";
       return true;
